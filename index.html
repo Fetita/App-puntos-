@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#4F46E5">
+  <title>Juego de Puntos</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      --primary:   #4F46E5;
+      --primary-l: #6366F1;
+      --success:   #10B981;
+      --bg:        #0F172A;
+      --surface:   #1E293B;
+      --surface2:  #334155;
+      --text:      #F1F5F9;
+      --muted:     #94A3B8;
+      --border:    #334155;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    #app { max-width: 480px; margin: 0 auto; min-height: 100dvh; }
+
+    /* ── SHARED ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+    }
+    .card-label {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: var(--muted); margin-bottom: 14px;
+    }
+
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 16px; border: none; border-radius: 14px;
+      font-size: 17px; font-weight: 700; cursor: pointer;
+      transition: transform .12s, opacity .15s;
+      -webkit-appearance: none;
+    }
+    .btn:active { transform: scale(.96); }
+    .btn-primary { background: linear-gradient(135deg,var(--primary),var(--primary-l)); color:#fff; }
+    .btn-success { background: linear-gradient(135deg,#059669,var(--success)); color:#fff; }
+    .btn-ghost   { background: var(--surface2); color: var(--text); }
+
+    .field {
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+      color: var(--text); font-size: 16px; outline: none;
+      transition: border-color .2s; width: 100%;
+      -webkit-appearance: none;
+    }
+    .field:focus { border-color: var(--primary-l); }
+    .field::placeholder { color: var(--muted); }
+    input[type=number].field { -moz-appearance: textfield; }
+    input[type=number].field::-webkit-inner-spin-button { opacity:1; }
+
+    .avatar {
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0; font-style: normal;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(18px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .animate { animation: fadeUp .35s ease both; }
+
+    /* player accent colors */
+    .c0 { background:#6366F1; } .t0 { color:#818CF8; } .p0 { background:linear-gradient(90deg,#6366F1,#818CF8); }
+    .c1 { background:#EC4899; } .t1 { color:#F472B6; } .p1 { background:linear-gradient(90deg,#EC4899,#F472B6); }
+    .c2 { background:#F59E0B; } .t2 { color:#FCD34D; } .p2 { background:linear-gradient(90deg,#F59E0B,#FCD34D); }
+    .c3 { background:#10B981; } .t3 { color:#34D399; } .p3 { background:linear-gradient(90deg,#10B981,#34D399); }
+    .c4 { background:#06B6D4; } .t4 { color:#67E8F9; } .p4 { background:linear-gradient(90deg,#06B6D4,#67E8F9); }
+
+    /* ── SETUP ── */
+    .setup { padding: 20px 16px 32px; }
+
+    .logo { text-align:center; padding: 32px 0 24px; }
+    .logo-icon { font-size:64px; display:block; margin-bottom:8px; }
+    .logo h1 {
+      font-size:28px; font-weight:900;
+      background: linear-gradient(135deg,#818CF8,#F472B6);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .logo p { color:var(--muted); font-size:14px; margin-top:4px; }
+
+    .player-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .player-row .avatar { width:40px; height:40px; font-size:20px; }
+
+    .target-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .target-row label { font-size:15px; }
+    .target-row .field { width:80px; text-align:center; }
+
+    /* ── GAME ── */
+    .game { display:flex; flex-direction:column; min-height:100dvh; }
+
+    .game-header {
+      background: linear-gradient(135deg,var(--primary),var(--primary-l));
+      padding: 18px 16px 22px;
+    }
+    .game-header-row {
+      display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;
+    }
+    .pill {
+      background:rgba(255,255,255,.2); border-radius:20px;
+      padding:5px 12px; font-size:13px; font-weight:600;
+    }
+    .game-header h2 { font-size:22px; font-weight:800; }
+
+    .game-body { flex:1; padding:14px 14px 0; overflow-y:auto; }
+
+    /* scoreboard */
+    .score-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    .score-row:last-child { margin-bottom:0; }
+    .score-row .avatar { width:36px; height:36px; font-size:16px; }
+    .score-info { flex:1; min-width:0; }
+    .score-name { font-size:14px; font-weight:600; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .bar-bg { height:7px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+    .bar-fill { height:100%; border-radius:4px; transition:width .5s ease; }
+    .score-num { font-size:20px; font-weight:800; min-width:38px; text-align:right; }
+
+    /* round inputs */
+    .round-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .round-row .avatar { width:36px; height:36px; font-size:16px; }
+    .round-name { flex:1; font-size:15px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pts-input {
+      width:72px; background:var(--surface2); border:2px solid var(--border);
+      border-radius:10px; padding:10px 6px; color:var(--text);
+      font-size:20px; font-weight:800; text-align:center; outline:none;
+      transition:border-color .2s; -webkit-appearance:none;
+      -moz-appearance:textfield;
+    }
+    .pts-input:focus { border-color:var(--primary-l); }
+    .pts-input::-webkit-inner-spin-button { opacity:1; }
+
+    /* history */
+    .hist-toggle {
+      display:flex; justify-content:space-between; align-items:center;
+      cursor:pointer; padding:10px 0 0; user-select:none;
+    }
+    .hist-toggle span { font-size:13px; color:var(--muted); }
+    .hist-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
+    .hist-table th {
+      color:var(--muted); font-weight:600; padding:5px 3px;
+      text-align:center; border-bottom:1px solid var(--border);
+    }
+    .hist-table th:first-child { text-align:left; }
+    .hist-table td { padding:5px 3px; text-align:center; border-bottom:1px solid var(--border); }
+    .hist-table td:first-child { text-align:left; color:var(--muted); }
+    .hidden { display:none !important; }
+
+    .game-footer {
+      padding:14px; background:var(--bg);
+      border-top:1px solid var(--border); position:sticky; bottom:0;
+    }
+
+    /* ── WINNER ── */
+    .winner {
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; min-height:100dvh;
+      padding:28px 16px; text-align:center; position:relative; overflow:hidden;
+    }
+
+    .trophy { font-size:88px; margin-bottom:14px; animation:bounce .8s ease infinite alternate; }
+    @keyframes bounce {
+      from { transform:translateY(0) scale(1); }
+      to   { transform:translateY(-18px) scale(1.05); }
+    }
+
+    .winner-label {
+      font-size:12px; font-weight:700; text-transform:uppercase;
+      letter-spacing:2px; color:var(--muted); margin-bottom:6px;
+    }
+    .winner-name {
+      font-size:38px; font-weight:900; line-height:1.1; margin-bottom:8px;
+      background:linear-gradient(135deg,#F59E0B,#EF4444,#EC4899);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .winner-sub { color:var(--muted); font-size:14px; margin-bottom:24px; }
+
+    .final-list { width:100%; }
+    .final-row {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 0; border-bottom:1px solid var(--border);
+    }
+    .final-row:last-child { border-bottom:none; }
+    .final-row .avatar { width:32px; height:32px; font-size:14px; }
+    .final-name { flex:1; font-size:15px; font-weight:600; }
+    .final-pts { font-size:19px; font-weight:800; }
+
+    /* confetti particles */
+    .confetti-wrap { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; overflow:hidden; }
+    .dot {
+      position:absolute; top:-10px; border-radius:50%;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      to { transform: translateY(110dvh) rotate(720deg); opacity:0; }
+    }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const EMOJIS  = ['🦊','🐼','🦁','🐯','🐸'];
+const N = 5;
+
+let S = {
+  screen: 'setup',
+  players: [],
+  target: 30,
+  round: 1,
+  inputs: Array(N).fill(''),
+  winner: null,
+  history: [],
+  showHist: false,
+};
+
+/* ── RENDER ── */
+function render() {
+  const app = document.getElementById('app');
+  if (S.screen === 'setup')  app.innerHTML = tplSetup();
+  if (S.screen === 'game')   app.innerHTML = tplGame();
+  if (S.screen === 'winner') app.innerHTML = tplWinner();
+  bind();
+}
+
+/* ── SETUP ── */
+function tplSetup() {
+  const rows = Array.from({length:N}, (_,i) => `
+    <div class="player-row">
+      <em class="avatar c${i}">${EMOJIS[i]}</em>
+      <input class="field" id="pn${i}" type="text" maxlength="18"
+        placeholder="Jugador ${i+1}" value="${esc(S.players[i]?.name||'')}">
+    </div>`).join('');
+  return `
+  <div class="setup animate">
+    <div class="logo">
+      <span class="logo-icon">🎮</span>
+      <h1>Juego de Puntos</h1>
+      <p>Primero en llegar a <strong>${S.target}</strong> gana</p>
+    </div>
+    <div class="card">
+      <div class="card-label">Jugadores</div>
+      ${rows}
+    </div>
+    <div class="card">
+      <div class="card-label">Configuración</div>
+      <div class="target-row">
+        <label>Puntos para ganar</label>
+        <input class="field" id="tgt" type="number" min="5" max="9999" value="${S.target}">
+      </div>
+    </div>
+    <button class="btn btn-primary" id="btn-start">¡Jugar! 🚀</button>
+  </div>`;
+}
+
+/* ── GAME ── */
+function tplGame() {
+  const scoreboard = S.players.map((p,i) => {
+    const pct = Math.min(p.score/S.target*100, 100).toFixed(1);
+    return `
+    <div class="score-row">
+      <em class="avatar c${i}">${EMOJIS[i]}</em>
+      <div class="score-info">
+        <div class="score-name">${esc(p.name)}</div>
+        <div class="bar-bg"><div class="bar-fill p${i}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="score-num t${i}">${p.score}</div>
+    </div>`;
+  }).join('');
+
+  const inputs = S.players.map((p,i) => `
+    <div class="round-row">
+      <em class="avatar c${i}">${EMOJIS[i]}</em>
+      <div class="round-name">${esc(p.name)}</div>
+      <input class="pts-input" id="ri${i}" type="number" min="0" max="999"
+        inputmode="numeric" placeholder="0" value="${S.inputs[i]||''}">
+    </div>`).join('');
+
+  let histSection = '';
+  if (S.history.length > 0) {
+    const ths = S.players.map(p=>`<th>${esc(firstName(p.name))}</th>`).join('');
+    const trs = S.history.map(h=>{
+      const tds = h.pts.map(v=>`<td>${v}</td>`).join('');
+      return `<tr><td>R${h.round}</td>${tds}</tr>`;
+    }).join('');
+    histSection = `
+    <div class="card">
+      <div class="hist-toggle" id="btn-hist">
+        <span>Historial de rondas (${S.history.length})</span>
+        <span>${S.showHist?'▲':'▼'}</span>
+      </div>
+      <div class="${S.showHist?'':'hidden'}">
+        <table class="hist-table">
+          <thead><tr><th></th>${ths}</tr></thead>
+          <tbody>${trs}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  return `
+  <div class="game">
+    <div class="game-header">
+      <div class="game-header-row">
+        <span class="pill">Ronda ${S.round}</span>
+        <span class="pill">Meta: ${S.target} pts</span>
+      </div>
+      <h2>¡En juego!</h2>
+    </div>
+    <div class="game-body">
+      <div class="card animate">
+        <div class="card-label">Puntuaciones</div>
+        ${scoreboard}
+      </div>
+      <div class="card animate">
+        <div class="card-label">Puntos — Ronda ${S.round}</div>
+        ${inputs}
+      </div>
+      ${histSection}
+      <div style="height:8px"></div>
+    </div>
+    <div class="game-footer">
+      <button class="btn btn-success" id="btn-round">Completar ronda ✓</button>
+    </div>
+  </div>`;
+}
+
+/* ── WINNER ── */
+function tplWinner() {
+  const medals = ['🥇','🥈','🥉','4º','5º'];
+  const sorted = [...S.players]
+    .map((p,i)=>({...p,i}))
+    .sort((a,b)=>b.score-a.score);
+
+  const rows = sorted.map((p,rank)=>`
+    <div class="final-row">
+      <span style="font-size:20px;min-width:28px">${medals[rank]}</span>
+      <em class="avatar c${p.i}">${EMOJIS[p.i]}</em>
+      <div class="final-name">${esc(p.name)}</div>
+      <div class="final-pts t${p.i}">${p.score} pts</div>
+    </div>`).join('');
+
+  const rounds = S.round - 1;
+  return `
+  <div class="winner animate">
+    ${confettiHtml()}
+    <div class="trophy">🏆</div>
+    <div class="winner-label">¡Ganador!</div>
+    <div class="winner-name">${esc(S.winner.name)}</div>
+    <div class="winner-sub">${rounds} ronda${rounds!==1?'s':''} jugadas</div>
+    <div class="card final-list">${rows}</div>
+    <div style="height:20px"></div>
+    <button class="btn btn-primary" id="btn-again">¡Jugar de nuevo! 🎮</button>
+  </div>`;
+}
+
+function confettiHtml() {
+  const colors=['#818CF8','#F472B6','#FCD34D','#34D399','#67E8F9','#F87171','#FB923C'];
+  const dots = Array.from({length:30},(_,i)=>{
+    const size = 6+Math.random()*10;
+    const left = Math.random()*100;
+    const dur  = 2.5+Math.random()*3;
+    const del  = Math.random()*2.5;
+    const col  = colors[i%colors.length];
+    return `<div class="dot" style="width:${size}px;height:${size}px;left:${left}%;background:${col};animation-duration:${dur}s;animation-delay:${del}s"></div>`;
+  }).join('');
+  return `<div class="confetti-wrap">${dots}</div>`;
+}
+
+/* ── EVENT BINDING ── */
+function bind() {
+  q('btn-start')?.addEventListener('click', startGame);
+  q('btn-round')?.addEventListener('click', submitRound);
+  q('btn-hist')?.addEventListener('click',  ()=>{ S.showHist=!S.showHist; render(); });
+  q('btn-again')?.addEventListener('click', playAgain);
+}
+
+/* ── ACTIONS ── */
+function startGame() {
+  const names = Array.from({length:N},(_,i)=>(val(`pn${i}`)||`Jugador ${i+1}`).trim());
+  const target = Math.max(5, parseInt(val('tgt'))||30);
+  S = { ...S,
+    screen:'game', target,
+    players: names.map(name=>({name, score:0})),
+    round:1, inputs:Array(N).fill(''), winner:null, history:[], showHist:false,
+  };
+  render();
+}
+
+function submitRound() {
+  const pts = Array.from({length:N},(_,i)=>Math.max(0, parseInt(val(`ri${i}`))||0));
+
+  const newPlayers = S.players.map((p,i)=>({...p, score: p.score+pts[i]}));
+  const newHistory = [...S.history, {round:S.round, pts}];
+
+  const maxScore = Math.max(...newPlayers.map(p=>p.score));
+  if (maxScore >= S.target) {
+    // among those who hit target, pick highest score (tie → first by position)
+    const winner = newPlayers.filter(p=>p.score>=S.target)
+                             .sort((a,b)=>b.score-a.score)[0];
+    S = {...S, players:newPlayers, history:newHistory, winner, round:S.round+1, screen:'winner'};
+  } else {
+    S = {...S, players:newPlayers, history:newHistory, round:S.round+1, inputs:Array(N).fill('')};
+  }
+  render();
+}
+
+function playAgain() {
+  S = {
+    screen:'setup',
+    players: S.players.map(p=>({...p, score:0})),
+    target: S.target,
+    round:1, inputs:Array(N).fill(''), winner:null, history:[], showHist:false,
+  };
+  render();
+}
+
+/* ── UTILS ── */
+function q(id) { return document.getElementById(id); }
+function val(id) { return q(id)?.value||''; }
+function firstName(name) { return name.split(' ')[0]; }
+function esc(str) {
+  const d=document.createElement('div');
+  d.appendChild(document.createTextNode(String(str)));
+  return d.innerHTML;
+}
+
+render();
+</script>
+</body>
+</html>
