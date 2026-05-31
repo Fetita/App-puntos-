@@ -12,162 +12,177 @@
       margin:0; padding:0; box-sizing:border-box;
       -webkit-tap-highlight-color:transparent;
     }
-
     :root {
-      --amber:    #D97706;
-      --amber-l:  #F59E0B;
-      --success:  #10B981;
-      --danger:   #EF4444;
-      --bg:       #0C0A00;
-      --surface:  #1C1500;
-      --surface2: #2D2200;
-      --text:     #FEF3C7;
-      --muted:    #A0856A;
-      --border:   #3D2E00;
+      --amber:   #D97706; --amber-l: #F59E0B;
+      --success: #10B981; --danger:  #EF4444;
+      --bg:      #0C0A00; --surface: #1C1500;
+      --surface2:#2D2200; --text:    #FEF3C7;
+      --muted:   #A0856A; --border:  #3D2E00;
+      --col-a:   #6366F1; --col-b:   #EC4899;
     }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100dvh;
-      overflow-x: hidden;
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+      background:var(--bg); color:var(--text);
+      min-height:100dvh; overflow-x:hidden;
     }
-
-    #app { max-width: 480px; margin: 0 auto; min-height: 100dvh; }
+    #app { max-width:480px; margin:0 auto; min-height:100dvh; }
 
     /* ── SHARED ── */
     .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
-      margin-bottom: 14px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:18px; padding:18px; margin-bottom:14px;
     }
     .card-label {
-      font-size: 11px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1.4px;
-      color: var(--muted); margin-bottom: 16px;
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:1.4px; color:var(--muted); margin-bottom:14px;
     }
-
     .btn {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      width: 100%; padding: 20px; border: none; border-radius: 16px;
-      font-size: 20px; font-weight: 800; cursor: pointer;
-      transition: transform .12s, filter .12s;
-      -webkit-appearance: none; letter-spacing: .3px;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      width:100%; padding:20px; border:none; border-radius:16px;
+      font-size:20px; font-weight:800; cursor:pointer;
+      transition:transform .12s,filter .12s; -webkit-appearance:none;
     }
-    .btn:active { transform: scale(.95); filter: brightness(.9); }
-    .btn-amber   { background: linear-gradient(135deg,var(--amber),var(--amber-l)); color:#000; }
-    .btn-success { background: linear-gradient(135deg,#059669,var(--success)); color:#fff; }
-    .btn-danger  { background: linear-gradient(135deg,#B91C1C,var(--danger)); color:#fff; }
-    .btn-ghost   { background: var(--surface2); color: var(--text); font-size:17px; }
+    .btn:active { transform:scale(.95); filter:brightness(.9); }
+    .btn-amber   { background:linear-gradient(135deg,var(--amber),var(--amber-l)); color:#000; }
+    .btn-success { background:linear-gradient(135deg,#059669,var(--success)); color:#fff; }
+    .btn-danger  { background:linear-gradient(135deg,#B91C1C,var(--danger)); color:#fff; }
 
     .field {
-      background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: 12px; padding: 14px 16px;
-      color: var(--text); font-size: 18px; outline: none;
-      transition: border-color .2s; width: 100%;
-      -webkit-appearance: none;
+      background:var(--surface2); border:1.5px solid var(--border);
+      border-radius:12px; padding:14px 16px;
+      color:var(--text); font-size:18px; outline:none;
+      transition:border-color .2s; width:100%; -webkit-appearance:none;
     }
-    .field:focus { border-color: var(--amber-l); }
-    .field::placeholder { color: var(--muted); }
-    input[type=number].field { -moz-appearance: textfield; }
+    .field:focus { border-color:var(--amber-l); }
+    .field::placeholder { color:var(--muted); }
+    input[type=number].field { -moz-appearance:textfield; }
     input[type=number].field::-webkit-inner-spin-button { opacity:1; }
 
     .avatar {
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0; font-style: normal;
+      border-radius:50%; display:flex; align-items:center;
+      justify-content:center; flex-shrink:0; font-style:normal;
     }
 
     @keyframes fadeUp {
-      from { opacity:0; transform:translateY(20px); }
-      to   { opacity:1; transform:translateY(0); }
+      from{opacity:0;transform:translateY(20px)}
+      to{opacity:1;transform:translateY(0)}
     }
-    .animate { animation: fadeUp .3s ease both; }
-
+    .animate { animation:fadeUp .3s ease both; }
     @keyframes shake {
-      0%,100% { transform:rotate(0); }
-      20% { transform:rotate(-8deg); }
-      40% { transform:rotate(8deg); }
-      60% { transform:rotate(-6deg); }
-      80% { transform:rotate(6deg); }
+      0%,100%{transform:rotate(0)} 20%{transform:rotate(-8deg)}
+      40%{transform:rotate(8deg)} 60%{transform:rotate(-6deg)} 80%{transform:rotate(6deg)}
     }
 
     /* player colors */
-    .c0{background:#6366F1} .t0{color:#818CF8} .p0{background:linear-gradient(90deg,#6366F1,#818CF8)}
-    .c1{background:#EC4899} .t1{color:#F472B6} .p1{background:linear-gradient(90deg,#EC4899,#F472B6)}
-    .c2{background:#F59E0B} .t2{color:#FCD34D} .p2{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
-    .c3{background:#10B981} .t3{color:#34D399} .p3{background:linear-gradient(90deg,#10B981,#34D399)}
-    .c4{background:#06B6D4} .t4{color:#67E8F9} .p4{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
+    .c0{background:#6366F1}.t0{color:#818CF8}.p0{background:linear-gradient(90deg,#6366F1,#818CF8)}
+    .c1{background:#EC4899}.t1{color:#F472B6}.p1{background:linear-gradient(90deg,#EC4899,#F472B6)}
+    .c2{background:#F59E0B}.t2{color:#FCD34D}.p2{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
+    .c3{background:#10B981}.t3{color:#34D399}.p3{background:linear-gradient(90deg,#10B981,#34D399)}
+    .c4{background:#06B6D4}.t4{color:#67E8F9}.p4{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
 
     /* ── SETUP ── */
-    .setup { padding: 20px 16px 36px; }
-
-    .logo { text-align:center; padding: 28px 0 24px; }
+    .setup { padding:20px 16px 36px; }
+    .logo { text-align:center; padding:28px 0 24px; }
     .logo-icon { font-size:72px; display:block; margin-bottom:10px; }
     .logo h1 {
       font-size:32px; font-weight:900;
-      background: linear-gradient(135deg,var(--amber),#EF4444);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      background-clip:text;
+      background:linear-gradient(135deg,var(--amber),#EF4444);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
-    .logo p { color:var(--muted); font-size:15px; margin-top:6px; }
-
+    .logo p { color:var(--muted); font-size:14px; margin-top:6px; line-height:1.5; }
     .player-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
     .player-row .avatar { width:46px; height:46px; font-size:22px; }
-
     .target-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .target-row label { font-size:16px; }
     .target-row .field { width:88px; text-align:center; }
 
     /* ── GAME ── */
     .game { display:flex; flex-direction:column; min-height:100dvh; }
-
     .game-header {
-      background: linear-gradient(135deg,#92400E,var(--amber));
-      padding: 20px 16px 24px;
+      background:linear-gradient(135deg,#92400E,var(--amber));
+      padding:18px 16px 22px;
     }
-    .game-header-row {
-      display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;
-    }
+    .game-header-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
     .pill {
       background:rgba(0,0,0,.25); border-radius:20px;
       padding:6px 14px; font-size:14px; font-weight:700; color:#fff;
     }
     .game-header h2 { font-size:24px; font-weight:900; color:#fff; }
-
     .game-body { flex:1; padding:14px 14px 0; overflow-y:auto; }
 
     /* scoreboard */
-    .score-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .score-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
     .score-row:last-child { margin-bottom:0; }
-    .score-row .avatar { width:40px; height:40px; font-size:18px; }
+    .score-row .avatar { width:38px; height:38px; font-size:17px; }
+    .score-sitting { opacity:.45; }
     .score-info { flex:1; min-width:0; }
     .score-name-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
-    .score-name { font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .score-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .drink-badge {
       font-size:11px; background:rgba(239,68,68,.2); color:#FCA5A5;
       border-radius:20px; padding:2px 8px; font-weight:700; flex-shrink:0; margin-left:6px;
-      white-space:nowrap;
     }
-    .bar-bg { height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+    .bar-bg { height:7px; background:var(--surface2); border-radius:4px; overflow:hidden; }
     .bar-fill { height:100%; border-radius:4px; transition:width .5s ease; }
-    .score-num { font-size:22px; font-weight:900; min-width:38px; text-align:right; }
+    .score-num { font-size:21px; font-weight:900; min-width:36px; text-align:right; }
 
-    /* round inputs */
-    .round-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-    .round-row .avatar { width:40px; height:40px; font-size:18px; }
-    .round-name { flex:1; font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pts-input {
-      width:80px; background:var(--surface2); border:2.5px solid var(--border);
-      border-radius:12px; padding:12px 6px; color:var(--text);
-      font-size:24px; font-weight:900; text-align:center; outline:none;
+    /* sitting-out selector */
+    .sitting-chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .player-chip {
+      display:flex; align-items:center; gap:6px;
+      background:var(--surface2); border:2px solid var(--border);
+      border-radius:50px; padding:10px 16px;
+      font-size:16px; font-weight:700; color:var(--muted);
+      cursor:pointer; transition:all .15s; -webkit-appearance:none;
+    }
+    .player-chip.chip-active {
+      background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.5); color:#FCA5A5;
+    }
+    .player-chip:active { transform:scale(.94); }
+
+    /* teams */
+    .teams-grid { display:flex; align-items:stretch; gap:8px; }
+    .team-col { flex:1; display:flex; flex-direction:column; gap:8px; }
+    .team-header {
+      text-align:center; font-size:12px; font-weight:800;
+      text-transform:uppercase; letter-spacing:1px; padding-bottom:6px;
+    }
+    .team-a-hdr { color:var(--col-a); }
+    .team-b-hdr { color:var(--col-b); }
+    .vs-col {
+      display:flex; align-items:center; justify-content:center;
+      font-size:16px; font-weight:900; color:var(--muted);
+      padding:28px 0 0;
+    }
+    .team-player-btn {
+      display:flex; align-items:center; gap:8px;
+      background:var(--surface2); border-radius:12px; padding:12px 10px;
+      font-size:15px; font-weight:700; cursor:pointer;
+      border:2px solid transparent; transition:all .15s; -webkit-appearance:none;
+      color:var(--text); width:100%;
+    }
+    .team-player-btn.team-a { border-color:rgba(99,102,241,.5); }
+    .team-player-btn.team-b { border-color:rgba(236,72,153,.5); }
+    .team-player-btn:active { transform:scale(.94); filter:brightness(.9); }
+    .team-player-btn .avatar { width:32px; height:32px; font-size:15px; }
+    .swap-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:6px; }
+
+    /* score inputs */
+    .team-score-grid { display:flex; align-items:center; gap:10px; }
+    .team-score-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; }
+    .team-score-label { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+    .ts-a { color:var(--col-a); }
+    .ts-b { color:var(--col-b); }
+    .big-input {
+      width:100%; background:var(--surface2); border:2.5px solid var(--border);
+      border-radius:14px; padding:16px 8px; color:var(--text);
+      font-size:32px; font-weight:900; text-align:center; outline:none;
       transition:border-color .2s; -webkit-appearance:none; -moz-appearance:textfield;
     }
-    .pts-input:focus { border-color:var(--amber-l); }
-    .pts-input::-webkit-inner-spin-button { opacity:1; }
+    .big-input.ia:focus { border-color:var(--col-a); }
+    .big-input.ib:focus { border-color:var(--col-b); }
+    .big-input::-webkit-inner-spin-button { opacity:1; }
+    .score-vs { font-size:20px; font-weight:900; color:var(--muted); flex-shrink:0; }
 
     /* history */
     .hist-toggle {
@@ -177,60 +192,48 @@
     .hist-toggle span { font-size:13px; color:var(--muted); }
     .hist-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:12px; }
     .hist-table th {
-      color:var(--muted); font-weight:700; padding:6px 3px;
+      color:var(--muted); font-weight:700; padding:5px 3px;
       text-align:center; border-bottom:1px solid var(--border);
     }
     .hist-table th:first-child { text-align:left; }
-    .hist-table td { padding:6px 3px; text-align:center; border-bottom:1px solid var(--border); }
+    .hist-table td { padding:5px 3px; text-align:center; border-bottom:1px solid var(--border); }
     .hist-table td:first-child { text-align:left; color:var(--muted); }
     .td-loser { color:#FCA5A5; font-weight:800; }
+    .td-rest  { opacity:.35; }
 
     .game-footer {
       padding:16px; background:var(--bg);
       border-top:1px solid var(--border); position:sticky; bottom:0;
     }
 
-    /* ── PENALTY SCREEN ── */
+    /* ── PENALTY ── */
     .penalty {
       display:flex; flex-direction:column; align-items:center;
       justify-content:center; min-height:100dvh;
-      padding:28px 20px; text-align:center; position:relative;
-      background: radial-gradient(ellipse at top, #3B0000 0%, var(--bg) 70%);
+      padding:28px 20px; text-align:center;
+      background:radial-gradient(ellipse at top,#3B0000 0%,var(--bg) 70%);
     }
-
-    .penalty-beer {
-      font-size:100px; margin-bottom:8px;
-      animation: shake .5s ease infinite;
-    }
-
+    .penalty-beer { font-size:100px; margin-bottom:8px; animation:shake .5s ease infinite; }
     .toma-text {
-      font-size:72px; font-weight:900; line-height:1;
-      background: linear-gradient(135deg,#FCD34D,#EF4444);
+      font-size:68px; font-weight:900; line-height:1;
+      background:linear-gradient(135deg,#FCD34D,#EF4444);
       -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      background-clip:text; margin-bottom:16px;
+      background-clip:text; margin-bottom:12px;
     }
-
-    .penalty-reason {
-      font-size:15px; color:var(--muted); margin-bottom:6px;
+    .penalty-score-ctx {
+      font-size:16px; font-weight:700; color:var(--muted);
+      margin-bottom:16px; line-height:1.6;
     }
-
-    .penalty-players {
-      display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
-      margin-bottom: 28px;
-    }
-
+    .penalty-score-ctx strong { color:var(--text); }
+    .penalty-players { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:10px; }
     .penalty-chip {
       display:flex; align-items:center; gap:8px;
       background:rgba(239,68,68,.15); border:1.5px solid rgba(239,68,68,.4);
       border-radius:50px; padding:10px 18px;
       font-size:18px; font-weight:800; color:#FCA5A5;
     }
-
-    .penalty-chip .avatar { width:32px; height:32px; font-size:15px; }
-
-    .penalty-extra {
-      font-size:13px; color:var(--muted); margin-bottom:32px; font-style:italic;
-    }
+    .penalty-chip .avatar { width:30px; height:30px; font-size:14px; }
+    .penalty-extra { font-size:13px; color:var(--muted); margin-bottom:28px; font-style:italic; }
 
     /* ── WINNER ── */
     .winner {
@@ -238,13 +241,10 @@
       justify-content:center; min-height:100dvh;
       padding:28px 16px; text-align:center; position:relative; overflow:hidden;
     }
-
     .trophy { font-size:90px; margin-bottom:14px; animation:bounce .8s ease infinite alternate; }
     @keyframes bounce {
-      from { transform:translateY(0) scale(1); }
-      to   { transform:translateY(-18px) scale(1.05); }
+      from{transform:translateY(0) scale(1)} to{transform:translateY(-18px) scale(1.05)}
     }
-
     .winner-label {
       font-size:12px; font-weight:700; text-transform:uppercase;
       letter-spacing:2px; color:var(--muted); margin-bottom:6px;
@@ -252,11 +252,9 @@
     .winner-name {
       font-size:40px; font-weight:900; line-height:1.1; margin-bottom:6px;
       background:linear-gradient(135deg,#F59E0B,#EF4444,#EC4899);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      background-clip:text;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
-    .winner-sub { color:var(--muted); font-size:14px; margin-bottom:24px; }
-
+    .winner-sub { color:var(--muted); font-size:14px; margin-bottom:20px; }
     .final-list { width:100%; }
     .final-row {
       display:flex; align-items:center; gap:10px;
@@ -267,24 +265,19 @@
     .final-name { flex:1; font-size:16px; font-weight:700; text-align:left; }
     .final-drinks { font-size:13px; color:#FCA5A5; margin-left:4px; }
     .final-pts { font-size:20px; font-weight:900; }
-
     .shame-banner {
-      width:100%; background:rgba(239,68,68,.12);
-      border:1.5px solid rgba(239,68,68,.3);
-      border-radius:14px; padding:14px 18px;
-      margin-bottom:14px; display:flex; align-items:center; gap:14px;
+      width:100%; background:rgba(239,68,68,.12); border:1.5px solid rgba(239,68,68,.3);
+      border-radius:14px; padding:14px 18px; margin-bottom:14px;
+      display:flex; align-items:center; gap:14px;
     }
     .shame-icon { font-size:36px; }
-    .shame-text { text-align:left; }
-    .shame-title { font-size:13px; color:#FCA5A5; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+    .shame-title { font-size:12px; color:#FCA5A5; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
     .shame-name { font-size:20px; font-weight:900; color:#FCA5A5; }
 
     /* confetti */
     .confetti-wrap { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; overflow:hidden; }
     .dot { position:absolute; top:-10px; border-radius:50%; animation:fall linear infinite; }
-    @keyframes fall {
-      to { transform:translateY(110dvh) rotate(720deg); opacity:0; }
-    }
+    @keyframes fall { to{transform:translateY(110dvh) rotate(720deg);opacity:0} }
 
     .hidden { display:none !important; }
   </style>
@@ -295,56 +288,57 @@
 const EMOJIS = ['🍺','🥃','🍻','🥂','🍷'];
 const N = 5;
 
-const TOMA_PHRASES = [
-  '¡TOMAAAA!','¡AL SECO!','¡CHUPAAAAAA!','¡ARRIBA ESE CODO!','¡VA DE TRAGO!',
-];
-const PENALTY_REASONS = [
-  'Último lugar esta ronda. Que duela 🥲',
-  'Fue el que menos sumó. Merece beberla.',
-  'No se puede jugar tan mal y tan sobrio.',
+const TOMA_PHRASES  = ['¡TOMAAAA!','¡AL SECO!','¡CHUPAAAAAA!','¡ARRIBA ESE CODO!','¡VA DE TRAGO!'];
+const TODOS_PHRASES = ['¡TODOS AL SECO!','¡EMPATE DE FRACASADOS!','¡NADIE SE SALVA!'];
+const PENALTY_SUBS  = [
+  'Perdieron la ronda. Que duela. 🥲',
+  'No se puede jugar tan mal.',
   'El juego castiga a los mediocres.',
-  'La mesa ha hablado. A tomar.',
-];
-const ZERO_REASONS = [
-  '¡CERO PUNTOS! Eso se paga doble 🍺🍺',
-  '¿Cero? Dos tragos y a repensar la vida.',
-  'La nada misma. Doble castigo.',
+  'La mesa ha hablado.',
+  'Perdieron. No hay excusas.',
 ];
 const WIN_QUOTES = [
-  'Menos borracho que todos. Por ahora.',
-  'Ganó con el hígado intacto.',
-  'Sobrio campeón. Qué asco.',
-  'El único que veía la pantalla.',
+  'Ganó con el hígado intacto.','El único que veía la pantalla.',
+  'Menos borracho que todos. Por ahora.','Sobrio campeón. Qué asco.',
 ];
 
 let S = {
-  screen: 'setup',   // setup | game | penalty | winner
-  players: [],
-  target: 30,
-  round: 1,
-  inputs: Array(N).fill(''),
-  penaltyIdxs: [],   // indices of players who drink this round
-  penaltyDouble: [], // indices who drink double (scored 0)
+  screen:   'setup',
+  players:  [],        // [{name, score, drinks}]
+  target:   30,
+  round:    1,
+  // round config
+  sittingOut: 0,
+  teamA: [1,2],
+  teamB: [3,4],
+  ptsA: '',
+  ptsB: '',
+  // penalty
+  penaltyIdxs:  [],
+  penaltyDouble:[],
+  lastPtsA: 0,
+  lastPtsB: 0,
   pendingPlayers: null,
   pendingHistory: null,
-  winner: null,
-  history: [],
+  // misc
+  winner:   null,
+  history:  [],
   showHist: false,
 };
 
 /* ── RENDER ── */
 function render() {
   const app = document.getElementById('app');
-  if (S.screen === 'setup')   app.innerHTML = tplSetup();
-  if (S.screen === 'game')    app.innerHTML = tplGame();
-  if (S.screen === 'penalty') app.innerHTML = tplPenalty();
-  if (S.screen === 'winner')  app.innerHTML = tplWinner();
+  if (S.screen==='setup')   app.innerHTML = tplSetup();
+  if (S.screen==='game')    app.innerHTML = tplGame();
+  if (S.screen==='penalty') app.innerHTML = tplPenalty();
+  if (S.screen==='winner')  app.innerHTML = tplWinner();
   bind();
 }
 
 /* ── SETUP ── */
 function tplSetup() {
-  const rows = Array.from({length:N}, (_,i) => `
+  const rows = Array.from({length:N},(_,i)=>`
     <div class="player-row">
       <em class="avatar c${i}">${EMOJIS[i]}</em>
       <input class="field" id="pn${i}" type="text" maxlength="18"
@@ -355,7 +349,7 @@ function tplSetup() {
     <div class="logo">
       <span class="logo-icon">🍺</span>
       <h1>Borrachos FC</h1>
-      <p>El último de cada ronda <strong>toma</strong>. Primero en llegar a ${S.target} gana.</p>
+      <p>5 jugadores · 2vs2 por ronda · 1 descansa<br>El equipo perdedor toma · Primero en llegar a ${S.target} gana</p>
     </div>
     <div class="card">
       <div class="card-label">Los jugadores</div>
@@ -374,17 +368,17 @@ function tplSetup() {
 
 /* ── GAME ── */
 function tplGame() {
-  const scoreboard = S.players.map((p,i) => {
-    const pct = Math.min(p.score/S.target*100, 100).toFixed(1);
-    const drinkLabel = p.drinks > 0
-      ? `<span class="drink-badge">🍺 ×${p.drinks}</span>` : '';
+  // Scoreboard
+  const scoreboard = S.players.map((p,i)=>{
+    const pct = Math.min(p.score/S.target*100,100).toFixed(1);
+    const sitting = i===S.sittingOut;
+    const db = p.drinks>0 ? `<span class="drink-badge">🍺×${p.drinks}</span>` : '';
     return `
-    <div class="score-row">
+    <div class="score-row ${sitting?'score-sitting':''}">
       <em class="avatar c${i}">${EMOJIS[i]}</em>
       <div class="score-info">
         <div class="score-name-row">
-          <div class="score-name">${esc(p.name)}</div>
-          ${drinkLabel}
+          <div class="score-name">${esc(p.name)}${sitting?' 💤':''}</div>${db}
         </div>
         <div class="bar-bg"><div class="bar-fill p${i}" style="width:${pct}%"></div></div>
       </div>
@@ -392,22 +386,35 @@ function tplGame() {
     </div>`;
   }).join('');
 
-  const inputs = S.players.map((p,i) => `
-    <div class="round-row">
-      <em class="avatar c${i}">${EMOJIS[i]}</em>
-      <div class="round-name">${esc(p.name)}</div>
-      <input class="pts-input" id="ri${i}" type="number" min="0" max="999"
-        inputmode="numeric" placeholder="0" value="${S.inputs[i]||''}">
-    </div>`).join('');
+  // Sitting-out chips
+  const sittingChips = S.players.map((p,i)=>`
+    <button class="player-chip ${i===S.sittingOut?'chip-active':''}" id="sit-${i}">
+      ${EMOJIS[i]} ${esc(firstName(p.name))}
+    </button>`).join('');
 
+  // Teams
+  const teamABtns = S.teamA.map(i=>`
+    <button class="team-player-btn team-a" id="swap-${i}">
+      <em class="avatar c${i}">${EMOJIS[i]}</em>${esc(firstName(S.players[i].name))}
+    </button>`).join('');
+  const teamBBtns = S.teamB.map(i=>`
+    <button class="team-player-btn team-b" id="swap-${i}">
+      <em class="avatar c${i}">${EMOJIS[i]}</em>${esc(firstName(S.players[i].name))}
+    </button>`).join('');
+
+  // History
   let histSection = '';
-  if (S.history.length > 0) {
+  if (S.history.length>0) {
     const ths = S.players.map(p=>`<th>${esc(firstName(p.name))}</th>`).join('');
-    const trs = S.history.map(h => {
-      const minPts = Math.min(...h.pts);
-      const tds = h.pts.map((v,i)=>{
-        const isLoser = v === minPts;
-        return `<td class="${isLoser?'td-loser':''}">${v}${isLoser?' 🍺':''}</td>`;
+    const trs = S.history.map(h=>{
+      const tds = S.players.map((_,i)=>{
+        if (i===h.sittingOut) return `<td class="td-rest">💤</td>`;
+        const inA = h.teamA.includes(i);
+        const pts = inA ? h.ptsA : h.ptsB;
+        const loserPts = Math.min(h.ptsA,h.ptsB);
+        const isTie = h.ptsA===h.ptsB;
+        const isLoser = isTie || pts===loserPts;
+        return `<td class="${isLoser?'td-loser':''}">${pts}${isLoser?' 🍺':''}</td>`;
       }).join('');
       return `<tr><td>R${h.round}</td>${tds}</tr>`;
     }).join('');
@@ -433,17 +440,52 @@ function tplGame() {
         <span class="pill">Ronda ${S.round}</span>
         <span class="pill">Meta: ${S.target} pts</span>
       </div>
-      <h2>¡A jugar, borre! 🍺</h2>
+      <h2>¡A jugar! 🍺</h2>
     </div>
     <div class="game-body">
       <div class="card animate">
         <div class="card-label">Puntuaciones</div>
         ${scoreboard}
       </div>
+
       <div class="card animate">
-        <div class="card-label">Puntos de esta ronda (Ronda ${S.round})</div>
-        ${inputs}
+        <div class="card-label">💤 ¿Quién descansa esta ronda?</div>
+        <div class="sitting-chips">${sittingChips}</div>
       </div>
+
+      <div class="card animate">
+        <div class="card-label">Equipos — tocá para intercambiar</div>
+        <div class="teams-grid">
+          <div class="team-col">
+            <div class="team-header team-a-hdr">Equipo A</div>
+            ${teamABtns}
+          </div>
+          <div class="vs-col">VS</div>
+          <div class="team-col">
+            <div class="team-header team-b-hdr">Equipo B</div>
+            ${teamBBtns}
+          </div>
+        </div>
+        <div class="swap-hint">Tocá un jugador para cambiarlo de equipo</div>
+      </div>
+
+      <div class="card animate">
+        <div class="card-label">Puntos de la ronda</div>
+        <div class="team-score-grid">
+          <div class="team-score-col">
+            <div class="team-score-label ts-a">Equipo A</div>
+            <input class="big-input ia" id="ptsA" type="number" min="0" max="9999"
+              inputmode="numeric" placeholder="0" value="${S.ptsA}">
+          </div>
+          <div class="score-vs">VS</div>
+          <div class="team-score-col">
+            <div class="team-score-label ts-b">Equipo B</div>
+            <input class="big-input ib" id="ptsB" type="number" min="0" max="9999"
+              inputmode="numeric" placeholder="0" value="${S.ptsB}">
+          </div>
+        </div>
+      </div>
+
       ${histSection}
       <div style="height:8px"></div>
     </div>
@@ -455,36 +497,39 @@ function tplGame() {
 
 /* ── PENALTY ── */
 function tplPenalty() {
-  const idxs = S.penaltyIdxs;
+  const idxs   = S.penaltyIdxs;
   const double = S.penaltyDouble;
+  const isTie  = S.lastPtsA === S.lastPtsB;
+  const isBothZero = S.lastPtsA === 0 && S.lastPtsB === 0;
 
-  const tomaPhrase = pick(TOMA_PHRASES);
+  const mainPhrase = (isTie || idxs.length===4) ? pick(TODOS_PHRASES) : pick(TOMA_PHRASES);
 
-  const chips = idxs.map(i => {
-    const isDouble = double.includes(i);
-    return `
+  // Score context
+  const nameA = S.teamA.map(i=>firstName(S.players[i].name)).join(' + ');
+  const nameB = S.teamB.map(i=>firstName(S.players[i].name)).join(' + ');
+  const ctxLine = isTie
+    ? `<strong>${nameA}</strong> ${S.lastPtsA} pts = <strong>${nameB}</strong> ${S.lastPtsB} pts · Empate, todos pagan`
+    : S.lastPtsA < S.lastPtsB
+      ? `<strong>${nameA}</strong> hizo ${S.lastPtsA} pts · <strong>${nameB}</strong> hizo ${S.lastPtsB} pts`
+      : `<strong>${nameA}</strong> hizo ${S.lastPtsA} pts · <strong>${nameB}</strong> hizo ${S.lastPtsB} pts`;
+
+  const chips = idxs.map(i=>`
     <div class="penalty-chip">
       <em class="avatar c${i}">${EMOJIS[i]}</em>
-      ${esc(S.players[i].name)}${isDouble ? ' 🍺🍺' : ' 🍺'}
-    </div>`;
-  }).join('');
+      ${esc(S.players[i].name)}${double.includes(i)?' 🍺🍺':' 🍺'}
+    </div>`).join('');
 
-  const anyDouble = idxs.some(i => double.includes(i));
-  const reason = anyDouble ? pick(ZERO_REASONS) : pick(PENALTY_REASONS);
-
-  const extraMsg = anyDouble
-    ? '¡Cero puntos = doble castigo, así es la vida!'
-    : idxs.length > 1
-    ? '¡Empate de fracasados! Todos toman igual.'
-    : '';
+  const extra = isBothZero  ? '¡Ambos equipos en 0! Todos pagan doble.' :
+                double.length ? '¡Cero puntos = doble castigo, así es la vida!' :
+                isTie         ? '¡La mesa no perdona empates!' : '';
 
   return `
   <div class="penalty animate">
     <div class="penalty-beer">🍺</div>
-    <div class="toma-text">${tomaPhrase}</div>
-    <div class="penalty-reason">${reason}</div>
+    <div class="toma-text">${mainPhrase}</div>
+    <div class="penalty-score-ctx">${ctxLine}</div>
     <div class="penalty-players">${chips}</div>
-    ${extraMsg ? `<div class="penalty-extra">${extraMsg}</div>` : ''}
+    ${extra?`<div class="penalty-extra">${extra}</div>`:''}
     <button class="btn btn-danger" id="btn-toma" style="max-width:340px">
       Ya tomé, seguimos 👊
     </button>
@@ -493,26 +538,23 @@ function tplPenalty() {
 
 /* ── WINNER ── */
 function tplWinner() {
-  const medals = ['🥇','🥈','🥉','4º','5º'];
-  const sorted = [...S.players].map((p,i)=>({...p,i})).sort((a,b)=>b.score-a.score);
+  const medals  = ['🥇','🥈','🥉','4º','5º'];
+  const sorted  = [...S.players].map((p,i)=>({...p,i})).sort((a,b)=>b.score-a.score);
   const mostDrunk = [...S.players].map((p,i)=>({...p,i})).sort((a,b)=>b.drinks-a.drinks)[0];
-
-  const rows = sorted.map((p,rank) => `
+  const rows = sorted.map((p,rank)=>`
     <div class="final-row">
       <span style="font-size:22px;min-width:28px">${medals[rank]}</span>
       <em class="avatar c${p.i}">${EMOJIS[p.i]}</em>
       <div class="final-name">${esc(p.name)}</div>
-      ${p.drinks>0 ? `<div class="final-drinks">🍺×${p.drinks}</div>` : ''}
+      ${p.drinks>0?`<div class="final-drinks">🍺×${p.drinks}</div>`:''}
       <div class="final-pts t${p.i}">${p.score}</div>
     </div>`).join('');
 
-  const winQuote = pick(WIN_QUOTES);
-  const rounds = S.round - 1;
-
-  const shameBanner = mostDrunk.drinks > 0 ? `
+  const rounds = S.round-1;
+  const shame = mostDrunk.drinks>0 ? `
     <div class="shame-banner">
       <div class="shame-icon">🤮</div>
-      <div class="shame-text">
+      <div>
         <div class="shame-title">El más en pedo</div>
         <div class="shame-name">${esc(mostDrunk.name)} — ${mostDrunk.drinks} tragos</div>
       </div>
@@ -524,8 +566,8 @@ function tplWinner() {
     <div class="trophy">🏆</div>
     <div class="winner-label">El menos borracho</div>
     <div class="winner-name">${esc(S.winner.name)}</div>
-    <div class="winner-sub">${winQuote} · ${rounds} ronda${rounds!==1?'s':''}</div>
-    ${shameBanner}
+    <div class="winner-sub">${pick(WIN_QUOTES)} · ${rounds} ronda${rounds!==1?'s':''}</div>
+    ${shame}
     <div class="card final-list" style="width:100%">${rows}</div>
     <div style="height:16px"></div>
     <button class="btn btn-amber" id="btn-again">¡Revancha! 🍻</button>
@@ -533,107 +575,120 @@ function tplWinner() {
 }
 
 function confettiHtml() {
-  const colors=['#F59E0B','#EF4444','#EC4899','#818CF8','#34D399','#FCD34D'];
+  const c=['#F59E0B','#EF4444','#EC4899','#818CF8','#34D399','#FCD34D'];
   const dots = Array.from({length:35},(_,i)=>{
-    const size=7+Math.random()*11, left=Math.random()*100;
-    const dur=2.5+Math.random()*3, del=Math.random()*2.5;
-    return `<div class="dot" style="width:${size}px;height:${size}px;left:${left}%;background:${colors[i%colors.length]};animation-duration:${dur}s;animation-delay:${del}s"></div>`;
+    const s=7+Math.random()*11, l=Math.random()*100, d=2.5+Math.random()*3, dl=Math.random()*2.5;
+    return `<div class="dot" style="width:${s}px;height:${s}px;left:${l}%;background:${c[i%c.length]};animation-duration:${d}s;animation-delay:${dl}s"></div>`;
   }).join('');
   return `<div class="confetti-wrap">${dots}</div>`;
 }
 
-/* ── EVENT BINDING ── */
+/* ── BIND ── */
 function bind() {
   q('btn-start')?.addEventListener('click', startGame);
   q('btn-round')?.addEventListener('click', submitRound);
   q('btn-toma')?.addEventListener('click',  confirmPenalty);
-  q('btn-hist')?.addEventListener('click',  ()=>{ S.showHist=!S.showHist; render(); });
+  q('btn-hist')?.addEventListener('click',  ()=>{S.showHist=!S.showHist;render();});
   q('btn-again')?.addEventListener('click', playAgain);
+
+  // sitting-out chips
+  Array.from({length:N},(_,i)=>q(`sit-${i}`)?.addEventListener('click',()=>setSittingOut(i)));
+
+  // team swap buttons (all active players)
+  [...S.teamA,...S.teamB].forEach(i=>q(`swap-${i}`)?.addEventListener('click',()=>swapPlayer(i)));
 }
 
 /* ── ACTIONS ── */
 function startGame() {
   const names = Array.from({length:N},(_,i)=>(val(`pn${i}`)||`Borracho ${i+1}`).trim());
-  const target = Math.max(5, parseInt(val('tgt'))||30);
+  const target = Math.max(5,parseInt(val('tgt'))||30);
   S = { ...S,
     screen:'game', target,
-    players: names.map(name=>({name, score:0, drinks:0})),
-    round:1, inputs:Array(N).fill(''), winner:null, history:[], showHist:false,
+    players: names.map(name=>({name,score:0,drinks:0})),
+    round:1, sittingOut:0, teamA:[1,2], teamB:[3,4],
+    ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+    pendingPlayers:null, pendingHistory:null,
   };
+  render();
+}
+
+function setSittingOut(idx) {
+  const remaining = [0,1,2,3,4].filter(i=>i!==idx);
+  S = {...S, sittingOut:idx, teamA:[remaining[0],remaining[1]], teamB:[remaining[2],remaining[3]], ptsA:'', ptsB:''};
+  render();
+}
+
+function swapPlayer(idx) {
+  if (S.teamA.includes(idx)) {
+    const other = S.teamA.find(i=>i!==idx);
+    S = {...S, teamA:[other, S.teamB[0]], teamB:[idx, S.teamB[1]]};
+  } else {
+    const other = S.teamB.find(i=>i!==idx);
+    S = {...S, teamB:[other, S.teamA[0]], teamA:[idx, S.teamA[1]]};
+  }
   render();
 }
 
 function submitRound() {
-  const pts = Array.from({length:N},(_,i)=>Math.max(0, parseInt(val(`ri${i}`))||0));
+  const ptsA = Math.max(0,parseInt(val('ptsA'))||0);
+  const ptsB = Math.max(0,parseInt(val('ptsB'))||0);
 
-  // Detect who drinks: lowest score this round
-  const minPts = Math.min(...pts);
-  const penaltyIdxs = pts.reduce((acc,v,i)=>v===minPts?[...acc,i]:acc, []);
+  // Who drinks?
+  let penaltyIdxs=[], penaltyDouble=[];
+  if (ptsA < ptsB)       { penaltyIdxs=[...S.teamA]; if(ptsA===0) penaltyDouble=[...S.teamA]; }
+  else if (ptsB < ptsA)  { penaltyIdxs=[...S.teamB]; if(ptsB===0) penaltyDouble=[...S.teamB]; }
+  else {
+    penaltyIdxs=[...S.teamA,...S.teamB];
+    if(ptsA===0) penaltyDouble=[...S.teamA,...S.teamB];
+  }
 
-  // Double penalty for zeros
-  const penaltyDouble = pts.reduce((acc,v,i)=>v===0?[...acc,i]:acc, []);
-
-  // Update scores and drinks
   const newPlayers = S.players.map((p,i)=>{
-    const isLoser = penaltyIdxs.includes(i);
-    const isZero  = penaltyDouble.includes(i);
-    const drinkAdd = isZero ? 2 : isLoser ? 1 : 0;
-    return {...p, score: p.score+pts[i], drinks: p.drinks+drinkAdd};
+    let gained = S.teamA.includes(i) ? ptsA : S.teamB.includes(i) ? ptsB : 0;
+    const drinkAdd = penaltyDouble.includes(i) ? 2 : penaltyIdxs.includes(i) ? 1 : 0;
+    return {...p, score:p.score+gained, drinks:p.drinks+drinkAdd};
   });
 
-  const newHistory = [...S.history, {round:S.round, pts}];
+  const newHistory = [...S.history, {round:S.round, sittingOut:S.sittingOut, teamA:[...S.teamA], teamB:[...S.teamB], ptsA, ptsB}];
 
-  // Check for winner
   const maxScore = Math.max(...newPlayers.map(p=>p.score));
   if (maxScore >= S.target) {
     const winner = newPlayers.filter(p=>p.score>=S.target).sort((a,b)=>b.score-a.score)[0];
     S = {...S, players:newPlayers, history:newHistory, winner, round:S.round+1, screen:'winner'};
-    render();
-    return;
+    render(); return;
   }
 
-  // Go to penalty screen first
-  S = {
-    ...S,
-    pendingPlayers: newPlayers,
-    pendingHistory: newHistory,
-    penaltyIdxs,
-    penaltyDouble,
-    screen: 'penalty',
-  };
+  S = {...S, pendingPlayers:newPlayers, pendingHistory:newHistory, penaltyIdxs, penaltyDouble, lastPtsA:ptsA, lastPtsB:ptsB, screen:'penalty'};
   render();
 }
 
 function confirmPenalty() {
-  S = {
-    ...S,
-    screen: 'game',
-    players: S.pendingPlayers,
-    history: S.pendingHistory,
-    round: S.round + 1,
-    inputs: Array(N).fill(''),
-    pendingPlayers: null,
-    pendingHistory: null,
+  const nextRound = S.round+1;
+  const nextSit   = (nextRound-1) % N;
+  const rem = [0,1,2,3,4].filter(i=>i!==nextSit);
+  S = {...S,
+    screen:'game', players:S.pendingPlayers, history:S.pendingHistory,
+    round:nextRound, sittingOut:nextSit, teamA:[rem[0],rem[1]], teamB:[rem[2],rem[3]],
+    ptsA:'', ptsB:'', pendingPlayers:null, pendingHistory:null,
   };
   render();
 }
 
 function playAgain() {
   S = {
-    screen:'setup',
-    players: S.players.map(p=>({...p, score:0, drinks:0})),
-    target: S.target,
-    round:1, inputs:Array(N).fill(''), winner:null, history:[], showHist:false,
+    screen:'setup', players:S.players.map(p=>({...p,score:0,drinks:0})),
+    target:S.target, round:1, sittingOut:0, teamA:[1,2], teamB:[3,4],
+    ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
     penaltyIdxs:[], penaltyDouble:[], pendingPlayers:null, pendingHistory:null,
+    lastPtsA:0, lastPtsB:0,
   };
   render();
 }
 
 /* ── UTILS ── */
-function q(id) { return document.getElementById(id); }
-function val(id) { return q(id)?.value||''; }
+function q(id)    { return document.getElementById(id); }
+function val(id)  { return q(id)?.value||''; }
 function firstName(name) { return name.split(' ')[0]; }
-function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 function esc(str) {
   const d=document.createElement('div');
   d.appendChild(document.createTextNode(String(str)));
