@@ -6,22 +6,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#6366F1">
-  <title>La Partida</title>
+  <title>Anotador de Truco</title>
   <style>
     *, *::before, *::after {
       margin:0; padding:0; box-sizing:border-box;
       -webkit-tap-highlight-color:transparent;
     }
     :root {
-      --primary:  #6366F1;
-      --primary-l:#818CF8;
+      --primary:  #6366F1; --primary-l:#818CF8;
       --success:  #10B981;
-      --bg:       #0F172A;
-      --surface:  #1E293B;
-      --surface2: #334155;
-      --text:     #F1F5F9;
-      --muted:    #94A3B8;
-      --border:   #334155;
+      --bg:       #0F172A; --surface:  #1E293B;
+      --surface2: #334155; --text:     #F1F5F9;
+      --muted:    #94A3B8; --border:   #334155;
     }
     html { height:100%; }
     body {
@@ -52,8 +48,8 @@
 
     .field {
       background:var(--surface2); border:1.5px solid var(--border);
-      border-radius:12px; padding:14px 16px;
-      color:var(--text); font-size:18px; outline:none;
+      border-radius:12px; padding:12px 14px;
+      color:var(--text); font-size:17px; outline:none;
       transition:border-color .2s; width:100%; -webkit-appearance:none;
     }
     .field:focus { border-color:var(--primary-l); }
@@ -65,7 +61,6 @@
       border-radius:50%; display:flex; align-items:center;
       justify-content:center; flex-shrink:0; font-style:normal;
     }
-
     @keyframes fadeUp {
       from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)}
     }
@@ -77,19 +72,41 @@
     .c2{background:#F59E0B}.t2{color:#FCD34D}.p2{background:linear-gradient(90deg,#F59E0B,#FCD34D)}
     .c3{background:#10B981}.t3{color:#34D399}.p3{background:linear-gradient(90deg,#10B981,#34D399)}
     .c4{background:#06B6D4}.t4{color:#67E8F9}.p4{background:linear-gradient(90deg,#06B6D4,#67E8F9)}
+    .c5{background:#8B5CF6}.t5{color:#A78BFA}.p5{background:linear-gradient(90deg,#8B5CF6,#A78BFA)}
 
     /* ── SETUP ── */
     .setup { padding:20px 16px 36px; }
-    .logo { text-align:center; padding:32px 0 24px; }
-    .logo-icon { font-size:72px; display:block; margin-bottom:10px; }
+    .logo { text-align:center; padding:28px 0 20px; }
+    .logo-icon { font-size:60px; display:block; margin-bottom:10px; }
     .logo h1 {
-      font-size:32px; font-weight:900;
+      font-size:28px; font-weight:900;
       background:linear-gradient(135deg,var(--primary-l),#F472B6);
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
-    .logo p { color:var(--muted); font-size:14px; margin-top:6px; line-height:1.5; }
-    .player-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; }
-    .player-row .avatar { width:46px; height:46px; font-size:22px; }
+    .logo p { color:var(--muted); font-size:14px; margin-top:6px; }
+
+    .count-selector { display:flex; gap:8px; }
+    .count-btn {
+      flex:1; padding:14px 4px; background:var(--surface2); border:2px solid var(--border);
+      border-radius:12px; font-size:22px; font-weight:900; color:var(--muted);
+      cursor:pointer; -webkit-appearance:none; transition:all .15s; text-align:center;
+    }
+    .count-btn.count-active {
+      background:rgba(99,102,241,.15); border-color:var(--primary); color:var(--primary-l);
+    }
+    .count-btn:active { transform:scale(.93); }
+    .mode-hint {
+      text-align:center; font-size:12px; color:var(--muted); margin-top:10px; line-height:1.5;
+    }
+
+    .player-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .player-row .avatar { width:40px; height:40px; font-size:18px; }
+    .team-divider {
+      font-size:11px; font-weight:800; text-transform:uppercase;
+      letter-spacing:1.2px; margin-bottom:10px; padding-top:4px;
+    }
+    .td-a { color:#818CF8; } .td-b { color:#F472B6; }
+
     .target-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
     .target-row label { font-size:16px; }
     .target-row .field { width:88px; text-align:center; }
@@ -105,27 +122,41 @@
       background:rgba(255,255,255,.18); border-radius:20px;
       padding:6px 14px; font-size:14px; font-weight:700; color:#fff;
     }
-    .game-header h2 { font-size:24px; font-weight:900; color:#fff; }
+    .game-header h2 { font-size:22px; font-weight:900; color:#fff; }
     .game-body { flex:1; padding:14px 14px 0; overflow-y:auto; }
 
-    /* scoreboard */
+    /* individual scoreboard (rotating mode) */
     .score-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
     .score-row:last-child { margin-bottom:0; }
-    .score-row .avatar { width:38px; height:38px; font-size:17px; }
-    .score-sitting { opacity:.4; }
+    .score-row .avatar { width:36px; height:36px; font-size:16px; }
+    .score-sitting { opacity:.38; }
     .score-info { flex:1; min-width:0; }
-    .score-name { font-size:14px; font-weight:700; margin-bottom:5px;
+    .score-name { font-size:14px; font-weight:700; margin-bottom:4px;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .bar-bg { height:7px; background:var(--surface2); border-radius:4px; overflow:hidden; }
     .bar-fill { height:100%; border-radius:4px; transition:width .5s ease; }
-    .score-num { font-size:21px; font-weight:900; min-width:36px; text-align:right; }
+    .score-num { font-size:20px; font-weight:900; min-width:34px; text-align:right; }
+
+    /* team scoreboard (team mode) */
+    .team-scores-grid { display:flex; gap:10px; }
+    .team-score-card {
+      flex:1; background:var(--surface2); border-radius:14px; padding:14px 12px;
+      display:flex; flex-direction:column; align-items:center; gap:6px;
+    }
+    .team-score-card.tsc-a { border-top:3px solid #818CF8; }
+    .team-score-card.tsc-b { border-top:3px solid #F472B6; }
+    .tsc-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+    .tsc-label-a { color:#818CF8; } .tsc-label-b { color:#F472B6; }
+    .tsc-members { font-size:12px; color:var(--muted); text-align:center; line-height:1.4; }
+    .tsc-score { font-size:42px; font-weight:900; }
+    .tsc-bar-wrap { width:100%; }
 
     /* sitting-out selector */
     .sitting-chips { display:flex; flex-wrap:wrap; gap:8px; }
     .player-chip {
       display:flex; align-items:center; gap:6px;
       background:var(--surface2); border:2px solid var(--border);
-      border-radius:50px; padding:10px 16px;
+      border-radius:50px; padding:10px 14px;
       font-size:15px; font-weight:700; color:var(--muted);
       cursor:pointer; transition:all .15s; -webkit-appearance:none;
     }
@@ -134,13 +165,12 @@
     }
     .player-chip:active { transform:scale(.93); }
 
-    /* teams */
+    /* teams display (rotating) */
     .teams-grid { display:flex; align-items:stretch; gap:8px; }
     .team-col { flex:1; display:flex; flex-direction:column; gap:8px; }
     .team-header { text-align:center; font-size:12px; font-weight:800;
       text-transform:uppercase; letter-spacing:1px; padding-bottom:6px; }
-    .team-a-hdr { color:#818CF8; }
-    .team-b-hdr { color:#F472B6; }
+    .team-a-hdr { color:#818CF8; } .team-b-hdr { color:#F472B6; }
     .vs-col {
       display:flex; align-items:center; justify-content:center;
       font-size:16px; font-weight:900; color:var(--muted); padding-top:28px;
@@ -152,14 +182,13 @@
     }
     .team-card.team-a { border-left:3px solid rgba(99,102,241,.7); }
     .team-card.team-b { border-left:3px solid rgba(236,72,153,.7); }
-    .team-card .avatar { width:32px; height:32px; font-size:15px; }
+    .team-card .avatar { width:30px; height:30px; font-size:14px; }
 
     /* score inputs */
     .team-score-grid { display:flex; align-items:center; gap:10px; }
     .team-score-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; }
-    .team-score-label { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
-    .ts-a { color:#818CF8; }
-    .ts-b { color:#F472B6; }
+    .ts-label { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+    .ts-a { color:#818CF8; } .ts-b { color:#F472B6; }
     .big-input {
       width:100%; background:var(--surface2); border:2.5px solid var(--border);
       border-radius:14px; padding:16px 8px; color:var(--text);
@@ -199,7 +228,7 @@
       justify-content:center; min-height:100vh;
       padding:28px 16px; text-align:center; position:relative; overflow:hidden;
     }
-    .trophy { font-size:90px; margin-bottom:14px; animation:bounce .8s ease infinite alternate; }
+    .trophy { font-size:88px; margin-bottom:14px; animation:bounce .8s ease infinite alternate; }
     @keyframes bounce {
       from{transform:translateY(0) scale(1)} to{transform:translateY(-18px) scale(1.05)}
     }
@@ -208,7 +237,7 @@
       letter-spacing:2px; color:var(--muted); margin-bottom:6px;
     }
     .winner-name {
-      font-size:40px; font-weight:900; line-height:1.1; margin-bottom:8px;
+      font-size:36px; font-weight:900; line-height:1.1; margin-bottom:8px;
       background:linear-gradient(135deg,#818CF8,#F472B6,#FCD34D);
       -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
@@ -219,8 +248,8 @@
       padding:12px 0; border-bottom:1px solid var(--border);
     }
     .final-row:last-child { border-bottom:none; }
-    .final-row .avatar { width:34px; height:34px; font-size:15px; }
-    .final-name { flex:1; font-size:16px; font-weight:700; text-align:left; }
+    .final-row .avatar { width:32px; height:32px; font-size:14px; }
+    .final-name { flex:1; font-size:15px; font-weight:700; text-align:left; }
     .final-pts { font-size:20px; font-weight:900; }
 
     /* confetti */
@@ -234,294 +263,456 @@
 <body>
 <div id="app"></div>
 <script>
-const EMOJIS = ['🦊','🐼','🦁','🐯','🐸'];
-const N = 5;
+var EMOJIS = ['🦊','🐼','🦁','🐯','🐸','🐺'];
 
-let S = {
-  screen:    'setup',
-  players:   [],      // [{name, score}]
-  target:    30,
-  round:     1,
-  sittingOut: N-1,
-  teamA:     [],
-  teamB:     [],
-  ptsA:      '',
-  ptsB:      '',
-  winner:    null,
-  history:   [],
-  showHist:  false,
+var S = {
+  screen:      'setup',
+  numPlayers:  4,
+  playerNames: [],
+  target:      30,
+  round:       1,
+  ptsA:        '',
+  ptsB:        '',
+  winner:      null,
+  history:     [],
+  showHist:    false,
+  // rotating (3,5 players) — individual tracking
+  players:     [],
+  sittingOut:  0,
+  teamA:       [],
+  teamB:       [],
+  // team mode (2,4,6 players) — team tracking
+  teamScores:  [0, 0],
+  teamAMembers:[],
+  teamBMembers:[],
 };
+
+/* ── MODE ── */
+function isRotating() { return S.numPlayers === 3 || S.numPlayers === 5; }
+function modeHint(n) {
+  if (n === 2) return '1 contra 1 · Puntos por equipo';
+  if (n === 3) return 'Rotativo 1vs1 · Un jugador descansa · Puntos individuales';
+  if (n === 4) return '2 contra 2 · Puntos por equipo';
+  if (n === 5) return 'Rotativo 2vs2 · Un jugador descansa · Puntos individuales';
+  if (n === 6) return '3 contra 3 · Puntos por equipo';
+  return '';
+}
+
+/* ── TEAM FORMATION (rotating only) ── */
+function computeTeams(sittingOut) {
+  var n = S.numPlayers;
+  if (n === 3) {
+    return { teamA:[(sittingOut+1)%3], teamB:[(sittingOut+2)%3] };
+  }
+  // n === 5: circular opposite-facing rule
+  var rem = [0,1,2,3].map(function(k){ return (sittingOut+1+k)%5; });
+  return { teamA:[rem[0],rem[2]], teamB:[rem[1],rem[3]] };
+}
 
 /* ── RENDER ── */
 function render() {
-  const app = document.getElementById('app');
-  if (S.screen==='setup')  app.innerHTML = tplSetup();
-  if (S.screen==='game')   app.innerHTML = tplGame();
-  if (S.screen==='winner') app.innerHTML = tplWinner();
+  var app = document.getElementById('app');
+  if (S.screen === 'setup')  app.innerHTML = tplSetup();
+  if (S.screen === 'game')   app.innerHTML = tplGame();
+  if (S.screen === 'winner') app.innerHTML = tplWinner();
   bind();
 }
 
 /* ── SETUP ── */
 function tplSetup() {
-  const rows = Array.from({length:N},(_,i)=>`
-    <div class="player-row">
-      <em class="avatar c${i}">${EMOJIS[i]}</em>
-      <input class="field" id="pn${i}" type="text" maxlength="18"
-        placeholder="Jugador ${i+1}" value="${esc((S.players[i] && S.players[i].name) || '')}">
-    </div>`).join('');
-  return `
-  <div class="setup animate">
-    <div class="logo">
-      <span class="logo-icon">🎮</span>
-      <h1>La Partida</h1>
-      <p>5 jugadores · 2vs2 por ronda · 1 descansa<br>Primero en llegar a ${S.target} puntos gana</p>
-    </div>
-    <div class="card">
-      <div class="card-label">Jugadores (en orden de asiento)</div>
-      ${rows}
-    </div>
-    <div class="card">
-      <div class="card-label">Puntos para ganar</div>
-      <div class="target-row">
-        <label>Meta</label>
-        <input class="field" id="tgt" type="number" min="5" max="9999" value="${S.target}">
-      </div>
-    </div>
-    <button class="btn btn-primary" id="btn-start">¡Jugar! 🚀</button>
-  </div>`;
+  var n = S.numPlayers;
+  var countBtns = [2,3,4,5,6].map(function(c) {
+    return '<button class="count-btn'+(c===n?' count-active':'')+'" id="cnt-'+c+'">'+c+'</button>';
+  }).join('');
+
+  var playerRows = '';
+  if (isRotating()) {
+    for (var i=0; i<n; i++) {
+      playerRows += '<div class="player-row">'
+        + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'
+        + '<input class="field" id="pn'+i+'" type="text" maxlength="18"'
+        + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
+        + '</div>';
+    }
+  } else {
+    var half = n/2;
+    playerRows += '<div class="team-divider td-a">Equipo A</div>';
+    for (var i=0; i<half; i++) {
+      playerRows += '<div class="player-row">'
+        + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'
+        + '<input class="field" id="pn'+i+'" type="text" maxlength="18"'
+        + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
+        + '</div>';
+    }
+    playerRows += '<div class="team-divider td-b" style="margin-top:12px">Equipo B</div>';
+    for (var i=half; i<n; i++) {
+      playerRows += '<div class="player-row">'
+        + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'
+        + '<input class="field" id="pn'+i+'" type="text" maxlength="18"'
+        + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
+        + '</div>';
+    }
+  }
+
+  return '<div class="setup animate">'
+    + '<div class="logo">'
+    + '<span class="logo-icon">🃏</span>'
+    + '<h1>Anotador de Truco</h1>'
+    + '<p>Primero en llegar a '+S.target+' puntos gana</p>'
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="card-label">¿Cuántos jugadores?</div>'
+    + '<div class="count-selector">'+countBtns+'</div>'
+    + '<div class="mode-hint">'+modeHint(n)+'</div>'
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="card-label">Jugadores'+(isRotating()?'':' por equipo')+'</div>'
+    + playerRows
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="card-label">Puntos para ganar</div>'
+    + '<div class="target-row">'
+    + '<label>Meta</label>'
+    + '<input class="field" id="tgt" type="number" min="5" max="9999" value="'+S.target+'">'
+    + '</div>'
+    + '</div>'
+    + '<button class="btn btn-primary" id="btn-start">¡Jugar! 🚀</button>'
+    + '</div>';
 }
 
 /* ── GAME ── */
 function tplGame() {
-  const scoreboard = S.players.map((p,i)=>{
-    const pct = Math.min(p.score/S.target*100,100).toFixed(1);
-    const sitting = i===S.sittingOut;
-    return `
-    <div class="score-row ${sitting?'score-sitting':''}">
-      <em class="avatar c${i}">${EMOJIS[i]}</em>
-      <div class="score-info">
-        <div class="score-name">${esc(p.name)}${sitting?' 💤':''}</div>
-        <div class="bar-bg"><div class="bar-fill p${i}" style="width:${pct}%"></div></div>
-      </div>
-      <div class="score-num t${i}">${p.score}</div>
-    </div>`;
+  var header = '<div class="game-header">'
+    + '<div class="game-header-row">'
+    + '<span class="pill">Ronda '+S.round+'</span>'
+    + '<span class="pill">Meta: '+S.target+' pts</span>'
+    + '</div>'
+    + '<h2>¡En juego! 🃏</h2>'
+    + '</div>';
+
+  var scoreSection = isRotating() ? tplScoreboardRotating() : tplScoreboardTeam();
+  var teamsSection = isRotating() ? tplTeamsRotating() : '';
+  var histSection  = tplHistory();
+
+  return '<div class="game">'
+    + header
+    + '<div class="game-body">'
+    + scoreSection
+    + teamsSection
+    + '<div class="card animate">'
+    + '<div class="card-label">Puntos de la ronda</div>'
+    + '<div class="team-score-grid">'
+    + '<div class="team-score-col">'
+    + '<div class="ts-label ts-a">Equipo A</div>'
+    + '<input class="big-input ia" id="ptsA" type="number" min="0" max="9999"'
+    + ' inputmode="numeric" placeholder="0" value="'+S.ptsA+'">'
+    + '</div>'
+    + '<div class="score-vs">VS</div>'
+    + '<div class="team-score-col">'
+    + '<div class="ts-label ts-b">Equipo B</div>'
+    + '<input class="big-input ib" id="ptsB" type="number" min="0" max="9999"'
+    + ' inputmode="numeric" placeholder="0" value="'+S.ptsB+'">'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + histSection
+    + '<div style="height:8px"></div>'
+    + '</div>'
+    + '<div class="game-footer">'
+    + '<button class="btn btn-success" id="btn-round">Completar ronda ✓</button>'
+    + '</div>'
+    + '</div>';
+}
+
+function tplScoreboardRotating() {
+  var rows = S.players.map(function(p,i) {
+    var pct = Math.min(p.score/S.target*100,100).toFixed(1);
+    var sitting = i===S.sittingOut;
+    return '<div class="score-row'+(sitting?' score-sitting':'')+'">'
+      + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'
+      + '<div class="score-info">'
+      + '<div class="score-name">'+esc(p.name)+(sitting?' 💤':'')+'</div>'
+      + '<div class="bar-bg"><div class="bar-fill p'+i+'" style="width:'+pct+'%"></div></div>'
+      + '</div>'
+      + '<div class="score-num t'+i+'">'+p.score+'</div>'
+      + '</div>';
+  }).join('');
+  return '<div class="card animate"><div class="card-label">Puntuaciones</div>'+rows+'</div>';
+}
+
+function tplScoreboardTeam() {
+  var sa = S.teamScores[0], sb = S.teamScores[1];
+  var pctA = Math.min(sa/S.target*100,100).toFixed(1);
+  var pctB = Math.min(sb/S.target*100,100).toFixed(1);
+  var membersA = S.teamAMembers.map(function(i){ return esc(firstName(S.players[i].name)); }).join('<br>');
+  var membersB = S.teamBMembers.map(function(i){ return esc(firstName(S.players[i].name)); }).join('<br>');
+  return '<div class="card animate">'
+    + '<div class="card-label">Puntuaciones</div>'
+    + '<div class="team-scores-grid">'
+    + '<div class="team-score-card tsc-a">'
+    + '<div class="tsc-label tsc-label-a">Equipo A</div>'
+    + '<div class="tsc-members">'+membersA+'</div>'
+    + '<div class="tsc-score t0">'+sa+'</div>'
+    + '<div class="tsc-bar-wrap"><div class="bar-bg"><div class="bar-fill p0" style="width:'+pctA+'%"></div></div></div>'
+    + '</div>'
+    + '<div class="team-score-card tsc-b">'
+    + '<div class="tsc-label tsc-label-b">Equipo B</div>'
+    + '<div class="tsc-members">'+membersB+'</div>'
+    + '<div class="tsc-score t1">'+sb+'</div>'
+    + '<div class="tsc-bar-wrap"><div class="bar-bg"><div class="bar-fill p1" style="width:'+pctB+'%"></div></div></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function tplTeamsRotating() {
+  var sittingChips = S.players.map(function(p,i) {
+    return '<button class="player-chip'+(i===S.sittingOut?' chip-active':'')+'" id="sit-'+i+'">'
+      + EMOJIS[i]+' '+esc(firstName(p.name))
+      + '</button>';
   }).join('');
 
-  const sittingChips = S.players.map((p,i)=>`
-    <button class="player-chip ${i===S.sittingOut?'chip-active':''}" id="sit-${i}">
-      ${EMOJIS[i]} ${esc(firstName(p.name))}
-    </button>`).join('');
+  var teamACards = S.teamA.map(function(i) {
+    return '<div class="team-card team-a">'
+      + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'+esc(firstName(S.players[i].name))
+      + '</div>';
+  }).join('');
+  var teamBCards = S.teamB.map(function(i) {
+    return '<div class="team-card team-b">'
+      + '<em class="avatar c'+i+'">'+EMOJIS[i]+'</em>'+esc(firstName(S.players[i].name))
+      + '</div>';
+  }).join('');
 
-  const teamACards = S.teamA.map(i=>`
-    <div class="team-card team-a">
-      <em class="avatar c${i}">${EMOJIS[i]}</em>${esc(firstName(S.players[i].name))}
-    </div>`).join('');
-  const teamBCards = S.teamB.map(i=>`
-    <div class="team-card team-b">
-      <em class="avatar c${i}">${EMOJIS[i]}</em>${esc(firstName(S.players[i].name))}
-    </div>`).join('');
+  return '<div class="card animate">'
+    + '<div class="card-label">💤 Descansa esta ronda</div>'
+    + '<div class="sitting-chips">'+sittingChips+'</div>'
+    + '</div>'
+    + '<div class="card animate">'
+    + '<div class="card-label">Equipos de esta ronda</div>'
+    + '<div class="teams-grid">'
+    + '<div class="team-col"><div class="team-header team-a-hdr">Equipo A</div>'+teamACards+'</div>'
+    + '<div class="vs-col">VS</div>'
+    + '<div class="team-col"><div class="team-header team-b-hdr">Equipo B</div>'+teamBCards+'</div>'
+    + '</div>'
+    + '</div>';
+}
 
-  let histSection = '';
-  if (S.history.length>0) {
-    const ths = S.players.map(p=>`<th>${esc(firstName(p.name))}</th>`).join('');
-    const trs = S.history.map(h=>{
-      const tds = S.players.map((_,i)=>{
-        if (i===h.sittingOut) return `<td class="td-rest">💤</td>`;
-        const inA = h.teamA.includes(i);
-        const pts = inA ? h.ptsA : h.ptsB;
-        const isWinner = pts === Math.max(h.ptsA,h.ptsB) && h.ptsA!==h.ptsB;
-        return `<td class="${isWinner?'td-win':''}">${pts}</td>`;
+function tplHistory() {
+  if (S.history.length === 0) return '';
+  var inner = '';
+  if (isRotating()) {
+    var ths = S.players.map(function(p){ return '<th>'+esc(firstName(p.name))+'</th>'; }).join('');
+    var trs = S.history.map(function(h) {
+      var tds = S.players.map(function(_,i) {
+        if (i===h.sittingOut) return '<td class="td-rest">💤</td>';
+        var inA = h.teamA.indexOf(i)>=0;
+        var pts = inA ? h.ptsA : h.ptsB;
+        var isWin = pts === Math.max(h.ptsA,h.ptsB) && h.ptsA!==h.ptsB;
+        return '<td class="'+(isWin?'td-win':'')+'">'+pts+'</td>';
       }).join('');
-      return `<tr><td>R${h.round}</td>${tds}</tr>`;
+      return '<tr><td>R'+h.round+'</td>'+tds+'</tr>';
     }).join('');
-    histSection = `
-    <div class="card">
-      <div class="hist-toggle" id="btn-hist">
-        <span>Historial (${S.history.length} rondas)</span>
-        <span>${S.showHist?'▲':'▼'}</span>
-      </div>
-      <div class="${S.showHist?'':'hidden'}">
-        <table class="hist-table">
-          <thead><tr><th></th>${ths}</tr></thead>
-          <tbody>${trs}</tbody>
-        </table>
-      </div>
-    </div>`;
+    inner = '<table class="hist-table"><thead><tr><th></th>'+ths+'</tr></thead><tbody>'+trs+'</tbody></table>';
+  } else {
+    var trs = S.history.map(function(h) {
+      var winA = h.ptsA>h.ptsB, winB = h.ptsB>h.ptsA;
+      return '<tr><td>R'+h.round+'</td>'
+        + '<td class="'+(winA?'td-win':'')+'">'+h.ptsA+'</td>'
+        + '<td class="'+(winB?'td-win':'')+'">'+h.ptsB+'</td>'
+        + '</tr>';
+    }).join('');
+    inner = '<table class="hist-table"><thead><tr><th></th><th>A</th><th>B</th></tr></thead><tbody>'+trs+'</tbody></table>';
   }
-
-  return `
-  <div class="game">
-    <div class="game-header">
-      <div class="game-header-row">
-        <span class="pill">Ronda ${S.round}</span>
-        <span class="pill">Meta: ${S.target} pts</span>
-      </div>
-      <h2>¡En juego! 🎮</h2>
-    </div>
-    <div class="game-body">
-      <div class="card animate">
-        <div class="card-label">Puntuaciones</div>
-        ${scoreboard}
-      </div>
-
-      <div class="card animate">
-        <div class="card-label">💤 Descansa esta ronda</div>
-        <div class="sitting-chips">${sittingChips}</div>
-      </div>
-
-      <div class="card animate">
-        <div class="card-label">Equipos (por posición en la mesa)</div>
-        <div class="teams-grid">
-          <div class="team-col">
-            <div class="team-header team-a-hdr">Equipo A</div>
-            ${teamACards}
-          </div>
-          <div class="vs-col">VS</div>
-          <div class="team-col">
-            <div class="team-header team-b-hdr">Equipo B</div>
-            ${teamBCards}
-          </div>
-        </div>
-      </div>
-
-      <div class="card animate">
-        <div class="card-label">Puntos de la ronda</div>
-        <div class="team-score-grid">
-          <div class="team-score-col">
-            <div class="team-score-label ts-a">Equipo A</div>
-            <input class="big-input ia" id="ptsA" type="number" min="0" max="9999"
-              inputmode="numeric" placeholder="0" value="${S.ptsA}">
-          </div>
-          <div class="score-vs">VS</div>
-          <div class="team-score-col">
-            <div class="team-score-label ts-b">Equipo B</div>
-            <input class="big-input ib" id="ptsB" type="number" min="0" max="9999"
-              inputmode="numeric" placeholder="0" value="${S.ptsB}">
-          </div>
-        </div>
-      </div>
-
-      ${histSection}
-      <div style="height:8px"></div>
-    </div>
-    <div class="game-footer">
-      <button class="btn btn-success" id="btn-round">Completar ronda ✓</button>
-    </div>
-  </div>`;
+  return '<div class="card">'
+    + '<div class="hist-toggle" id="btn-hist">'
+    + '<span>Historial ('+S.history.length+' rondas)</span>'
+    + '<span>'+(S.showHist?'▲':'▼')+'</span>'
+    + '</div>'
+    + '<div class="'+(S.showHist?'':'hidden')+'">'+inner+'</div>'
+    + '</div>';
 }
 
 /* ── WINNER ── */
 function tplWinner() {
-  const medals = ['🥇','🥈','🥉','4º','5º'];
-  const sorted = [...S.players].map((p,i)=>({...p,i})).sort((a,b)=>b.score-a.score);
-  const rows = sorted.map((p,rank)=>`
-    <div class="final-row">
-      <span style="font-size:22px;min-width:28px">${medals[rank]}</span>
-      <em class="avatar c${p.i}">${EMOJIS[p.i]}</em>
-      <div class="final-name">${esc(p.name)}</div>
-      <div class="final-pts t${p.i}">${p.score}</div>
-    </div>`).join('');
-  const rounds = S.round-1;
-  return `
-  <div class="winner animate">
-    ${confettiHtml()}
-    <div class="trophy">🏆</div>
-    <div class="winner-label">¡Ganador!</div>
-    <div class="winner-name">${esc(S.winner.name)}</div>
-    <div class="winner-sub">${rounds} ronda${rounds!==1?'s':''} jugadas</div>
-    <div class="card final-list" style="width:100%">${rows}</div>
-    <div style="height:16px"></div>
-    <button class="btn btn-primary" id="btn-again">¡Revancha! 🎮</button>
-  </div>`;
+  var rounds = S.round-1;
+  var inner = '';
+  if (isRotating()) {
+    var medals = ['🥇','🥈','🥉','4º','5º'];
+    var sorted = S.players.map(function(p,i){ return {name:p.name,score:p.score,i:i}; })
+                          .sort(function(a,b){ return b.score-a.score; });
+    inner = sorted.map(function(p,rank) {
+      return '<div class="final-row">'
+        + '<span style="font-size:22px;min-width:28px">'+medals[rank]+'</span>'
+        + '<em class="avatar c'+p.i+'">'+EMOJIS[p.i]+'</em>'
+        + '<div class="final-name">'+esc(p.name)+'</div>'
+        + '<div class="final-pts t'+p.i+'">'+p.score+'</div>'
+        + '</div>';
+    }).join('');
+  } else {
+    var sa = S.teamScores[0], sb = S.teamScores[1];
+    var mA = S.teamAMembers.map(function(i){ return esc(S.players[i].name); }).join(', ');
+    var mB = S.teamBMembers.map(function(i){ return esc(S.players[i].name); }).join(', ');
+    var winA = sa >= sb;
+    inner = '<div class="final-row">'
+      + '<span style="font-size:22px;min-width:28px">'+(winA?'🥇':'🥈')+'</span>'
+      + '<div class="final-name"><span style="color:#818CF8;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;display:block">Equipo A</span>'+mA+'</div>'
+      + '<div class="final-pts t0">'+sa+'</div>'
+      + '</div>'
+      + '<div class="final-row">'
+      + '<span style="font-size:22px;min-width:28px">'+(!winA?'🥇':'🥈')+'</span>'
+      + '<div class="final-name"><span style="color:#F472B6;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;display:block">Equipo B</span>'+mB+'</div>'
+      + '<div class="final-pts t1">'+sb+'</div>'
+      + '</div>';
+  }
+  return '<div class="winner animate">'
+    + confettiHtml()
+    + '<div class="trophy">🏆</div>'
+    + '<div class="winner-label">¡Ganador!</div>'
+    + '<div class="winner-name">'+esc(S.winner)+'</div>'
+    + '<div class="winner-sub">'+rounds+' ronda'+(rounds!==1?'s':'')+' jugadas</div>'
+    + '<div class="card final-list" style="width:100%">'+inner+'</div>'
+    + '<div style="height:16px"></div>'
+    + '<button class="btn btn-primary" id="btn-again">¡Revancha! 🃏</button>'
+    + '</div>';
 }
 
 function confettiHtml() {
-  const c=['#818CF8','#F472B6','#FCD34D','#34D399','#67E8F9','#F87171','#FB923C'];
-  const dots = Array.from({length:35},(_,i)=>{
-    const s=7+Math.random()*11, l=Math.random()*100, d=2.5+Math.random()*3, dl=Math.random()*2.5;
-    return `<div class="dot" style="width:${s}px;height:${s}px;left:${l}%;background:${c[i%c.length]};animation-duration:${d}s;animation-delay:${dl}s"></div>`;
-  }).join('');
-  return `<div class="confetti-wrap">${dots}</div>`;
+  var c=['#818CF8','#F472B6','#FCD34D','#34D399','#67E8F9','#F87171'];
+  var dots = '';
+  for (var i=0;i<35;i++) {
+    var s=7+Math.random()*11, l=Math.random()*100, d=2.5+Math.random()*3, dl=Math.random()*2.5;
+    dots += '<div class="dot" style="width:'+s+'px;height:'+s+'px;left:'+l+'%;background:'+c[i%c.length]+';animation-duration:'+d+'s;animation-delay:'+dl+'s"></div>';
+  }
+  return '<div class="confetti-wrap">'+dots+'</div>';
 }
 
 /* ── BIND ── */
-function on(id, fn) { var el=q(id); if(el) el.addEventListener('click', fn); }
+function on(id, fn) { var el=q(id); if(el) el.addEventListener('click',fn); }
 function bind() {
   on('btn-start', startGame);
   on('btn-round', submitRound);
-  on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
   on('btn-again', playAgain);
-  for(var i=0;i<N;i++) { (function(idx){ on('sit-'+idx, function(){ setSittingOut(idx); }); })(i); }
-}
-
-/* ── TEAM FORMATION ──
-   Players sit in a circle. Remaining 4 (in circular order after sittingOut)
-   fill seats 0-3. Seats 0&2 face each other → Team A. Seats 1&3 → Team B. */
-function computeTeams(sittingOut) {
-  const rem = Array.from({length:N-1},(_,k)=>(sittingOut+1+k)%N);
-  return { teamA:[rem[0],rem[2]], teamB:[rem[1],rem[3]] };
+  on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
+  [2,3,4,5,6].forEach(function(c){ on('cnt-'+c, function(){ setNumPlayers(c); }); });
+  if (isRotating()) {
+    for (var i=0;i<S.numPlayers;i++) {
+      (function(idx){ on('sit-'+idx, function(){ setSittingOut(idx); }); })(i);
+    }
+  }
 }
 
 /* ── ACTIONS ── */
+function setNumPlayers(n) {
+  var cur = [];
+  for (var i=0;i<S.numPlayers;i++) {
+    var el = q('pn'+i);
+    cur[i] = el ? el.value : (S.playerNames[i]||'');
+  }
+  S = Object.assign({}, S, { numPlayers:n, playerNames:cur });
+  render();
+}
+
 function startGame() {
-  const names = Array.from({length:N},(_,i)=>(val(`pn${i}`)||`Jugador ${i+1}`).trim());
-  const target = Math.max(5,parseInt(val('tgt'))||30);
-  const sit0 = N-1;
-  const {teamA,teamB} = computeTeams(sit0);
-  S = { ...S,
-    screen:'game', target,
-    players: names.map(name=>({name,score:0})),
-    round:1, sittingOut:sit0, teamA, teamB,
-    ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
-  };
+  var n = S.numPlayers;
+  var names = [];
+  for (var i=0;i<n;i++) names.push((val('pn'+i)||'Jugador '+(i+1)).trim());
+  var target = Math.max(5, parseInt(val('tgt'))||30);
+
+  if (isRotating()) {
+    var sit0 = n-1;
+    var teams = computeTeams(sit0);
+    S = Object.assign({}, S, {
+      screen:'game', target,
+      players: names.map(function(name){ return {name:name,score:0}; }),
+      round:1, sittingOut:sit0, teamA:teams.teamA, teamB:teams.teamB,
+      ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+    });
+  } else {
+    var half = n/2;
+    var membA = [], membB = [];
+    for (var i=0;i<half;i++) membA.push(i);
+    for (var i=half;i<n;i++) membB.push(i);
+    S = Object.assign({}, S, {
+      screen:'game', target,
+      players: names.map(function(name){ return {name:name,score:0}; }),
+      teamScores:[0,0], teamAMembers:membA, teamBMembers:membB,
+      round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+    });
+  }
   render();
 }
 
 function setSittingOut(idx) {
-  const {teamA,teamB} = computeTeams(idx);
-  S = {...S, sittingOut:idx, teamA, teamB, ptsA:'', ptsB:''};
+  var teams = computeTeams(idx);
+  S = Object.assign({}, S, { sittingOut:idx, teamA:teams.teamA, teamB:teams.teamB, ptsA:'', ptsB:'' });
   render();
 }
 
 function submitRound() {
-  const ptsA = Math.max(0,parseInt(val('ptsA'))||0);
-  const ptsB = Math.max(0,parseInt(val('ptsB'))||0);
+  var ptsA = Math.max(0, parseInt(val('ptsA'))||0);
+  var ptsB = Math.max(0, parseInt(val('ptsB'))||0);
+  var newHistory = S.history.concat([{
+    round:S.round, ptsA:ptsA, ptsB:ptsB,
+    sittingOut:S.sittingOut, teamA:S.teamA.slice(), teamB:S.teamB.slice()
+  }]);
 
-  const newPlayers = S.players.map((p,i)=>{
-    const gained = S.teamA.includes(i) ? ptsA : S.teamB.includes(i) ? ptsB : 0;
-    return {...p, score:p.score+gained};
-  });
-  const newHistory = [...S.history, {round:S.round, sittingOut:S.sittingOut, teamA:[...S.teamA], teamB:[...S.teamB], ptsA, ptsB}];
-
-  const maxScore = Math.max(...newPlayers.map(p=>p.score));
-  if (maxScore >= S.target) {
-    const winner = newPlayers.filter(p=>p.score>=S.target).sort((a,b)=>b.score-a.score)[0];
-    S = {...S, players:newPlayers, history:newHistory, winner, round:S.round+1, screen:'winner'};
+  if (isRotating()) {
+    var newPlayers = S.players.map(function(p,i) {
+      var gained = S.teamA.indexOf(i)>=0 ? ptsA : S.teamB.indexOf(i)>=0 ? ptsB : 0;
+      return { name:p.name, score:p.score+gained };
+    });
+    var maxScore = Math.max.apply(null, newPlayers.map(function(p){ return p.score; }));
+    if (maxScore >= S.target) {
+      var wp = newPlayers.filter(function(p){ return p.score>=S.target; })
+                         .sort(function(a,b){ return b.score-a.score; })[0];
+      S = Object.assign({}, S, { players:newPlayers, history:newHistory, winner:wp.name, round:S.round+1, screen:'winner' });
+    } else {
+      var nextSit = (S.sittingOut+1)%S.numPlayers;
+      var teams = computeTeams(nextSit);
+      S = Object.assign({}, S, { players:newPlayers, history:newHistory, round:S.round+1, sittingOut:nextSit, teamA:teams.teamA, teamB:teams.teamB, ptsA:'', ptsB:'' });
+    }
   } else {
-    const nextSit = (S.sittingOut+1)%N;
-    const {teamA,teamB} = computeTeams(nextSit);
-    S = {...S, players:newPlayers, history:newHistory, round:S.round+1, sittingOut:nextSit, teamA, teamB, ptsA:'', ptsB:''};
+    var newTeamScores = [S.teamScores[0]+ptsA, S.teamScores[1]+ptsB];
+    var maxTeam = Math.max(newTeamScores[0], newTeamScores[1]);
+    if (maxTeam >= S.target) {
+      var winIdx = newTeamScores[0]>=newTeamScores[1] ? 0 : 1;
+      var members = winIdx===0 ? S.teamAMembers : S.teamBMembers;
+      var winName = members.map(function(i){ return firstName(S.players[i].name); }).join(' + ');
+      S = Object.assign({}, S, { teamScores:newTeamScores, history:newHistory, winner:winName, round:S.round+1, screen:'winner' });
+    } else {
+      S = Object.assign({}, S, { teamScores:newTeamScores, history:newHistory, round:S.round+1, ptsA:'', ptsB:'' });
+    }
   }
   render();
 }
 
 function playAgain() {
-  const sit0 = N-1;
-  const {teamA,teamB} = computeTeams(sit0);
-  S = {
-    screen:'setup', players:S.players.map(p=>({...p,score:0})),
-    target:S.target, round:1, sittingOut:sit0, teamA, teamB,
-    ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
-  };
+  var sit0 = S.numPlayers-1;
+  if (isRotating()) {
+    var teams = computeTeams(sit0);
+    S = Object.assign({}, S, {
+      screen:'setup',
+      players: S.players.map(function(p){ return {name:p.name,score:0}; }),
+      round:1, sittingOut:sit0, teamA:teams.teamA, teamB:teams.teamB,
+      ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+    });
+  } else {
+    S = Object.assign({}, S, {
+      screen:'setup',
+      players: S.players.map(function(p){ return {name:p.name,score:0}; }),
+      teamScores:[0,0],
+      round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+    });
+  }
   render();
 }
 
 /* ── UTILS ── */
 function q(id)   { return document.getElementById(id); }
-function val(id) { var el=q(id); return el ? el.value : ''; }
+function val(id) { var el=q(id); return el?el.value:''; }
 function firstName(name) { return name.split(' ')[0]; }
 function esc(str) {
-  const d=document.createElement('div');
+  var d=document.createElement('div');
   d.appendChild(document.createTextNode(String(str)));
   return d.innerHTML;
 }
