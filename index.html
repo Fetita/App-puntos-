@@ -327,6 +327,40 @@
 
     .hidden { display:none !important; }
     .watermark { position:absolute; opacity:.04; pointer-events:none; z-index:0; }
+
+    /* cantos panel */
+    .cantos-toggle {
+      display:flex; align-items:center; justify-content:space-between;
+      width:100%; background:transparent; border:none;
+      border-top:1px solid var(--line);
+      padding:13px 0 0; margin-top:14px;
+      color:var(--gold); font-family:Georgia,serif; font-size:12px;
+      font-weight:700; letter-spacing:1.5px; text-transform:uppercase;
+      cursor:pointer; -webkit-appearance:none;
+    }
+    .cantos-panel { margin-top:10px; }
+    .cantos-group-label {
+      font-family:Georgia,serif; font-size:10px; text-transform:uppercase;
+      letter-spacing:2px; color:rgba(244,234,210,.45); margin:10px 0 5px; padding-left:1px;
+    }
+    .canto-row {
+      display:flex; align-items:center; gap:8px; padding:5px 1px;
+      border-bottom:1px solid rgba(244,234,210,.06);
+    }
+    .canto-row:last-child { border-bottom:none; }
+    .canto-name { flex:1; font-size:13px; color:var(--cream); font-family:Georgia,serif; }
+    .canto-btns { display:flex; gap:5px; }
+    .canto-btn {
+      padding:7px 10px; border-radius:8px; font-size:12px; font-weight:700;
+      font-family:Georgia,serif; cursor:pointer; -webkit-appearance:none;
+      min-width:52px; text-align:center; border:1.5px solid;
+      transition:transform .1s,background .1s;
+    }
+    .canto-btn:active { transform:scale(.9); }
+    .canto-btn-a { background:rgba(227,179,65,.14); border-color:rgba(227,179,65,.38); color:var(--gold-l); }
+    .canto-btn-a:active { background:rgba(227,179,65,.3); }
+    .canto-btn-b { background:rgba(207,68,54,.14); border-color:rgba(207,68,54,.38); color:var(--red-l); }
+    .canto-btn-b:active { background:rgba(207,68,54,.3); }
   </style>
 </head>
 <body>
@@ -351,10 +385,27 @@ function suitFan(size) {
 
 var S = {
   screen:'setup', numPlayers:4, playerNames:[], target:30, round:1,
-  ptsA:'', ptsB:'', winner:null, winnerTeam:null, history:[], showHist:false,
+  ptsA:'', ptsB:'', winner:null, winnerTeam:null, history:[], showHist:false, showCantos:false,
   players:[], sittingOut:0, teamA:[], teamB:[],
   teamScores:[0,0], teamAMembers:[], teamBMembers:[],
 };
+
+var CANTOS = [
+  {g:'Envido', label:'Envido querido',          id:'c0',  pts:2},
+  {g:'Envido', label:'Envido no querido',        id:'c1',  pts:1},
+  {g:'Envido', label:'Env. Env. querido',        id:'c2',  pts:4},
+  {g:'Envido', label:'Env. Env. no querido',     id:'c3',  pts:2},
+  {g:'Envido', label:'Real Env. querido',        id:'c4',  pts:3},
+  {g:'Envido', label:'Real Env. no querido',     id:'c5',  pts:1},
+  {g:'Envido', label:'Env+Real querido',         id:'c6',  pts:5},
+  {g:'Envido', label:'Env+Real no querido',      id:'c7',  pts:2},
+  {g:'Truco',  label:'Truco querido',            id:'c8',  pts:2},
+  {g:'Truco',  label:'Truco no querido',         id:'c9',  pts:1},
+  {g:'Truco',  label:'Retruco querido',          id:'c10', pts:3},
+  {g:'Truco',  label:'Retruco no querido',       id:'c11', pts:2},
+  {g:'Truco',  label:'Vale Cuatro querido',      id:'c12', pts:4},
+  {g:'Truco',  label:'Vale Cuatro no querido',   id:'c13', pts:3},
+];
 
 /* ── MODE ── */
 function isRotating() { return S.numPlayers % 2 === 1; }
@@ -514,6 +565,7 @@ function tplGame() {
     + '</div>'
     + '</div>'
     + '</div>'
+    + tplCantos()
     + '</div>'
     + tplHistory()
     + '<div style="height:6px"></div>'
@@ -634,6 +686,31 @@ function tplHistory() {
     + '</div>';
 }
 
+function tplCantos() {
+  var open = S.showCantos;
+  var toggle = '<button class="cantos-toggle" id="btn-cantos">'
+    + '<span>Cantos</span><span>'+(open?'▲':'▼')+'</span>'
+    + '</button>';
+  if (!open) return toggle;
+  var lastG = '', rows = '';
+  for (var ci=0; ci<CANTOS.length; ci++) {
+    var c = CANTOS[ci];
+    if (c.g !== lastG) {
+      if (lastG) rows += '</div>';
+      lastG = c.g;
+      rows += '<div><div class="cantos-group-label">'+c.g+'</div>';
+    }
+    rows += '<div class="canto-row">'
+      + '<span class="canto-name">'+c.label+'</span>'
+      + '<div class="canto-btns">'
+      + '<button class="canto-btn canto-btn-a" id="ca-'+c.id+'">Oro +'+c.pts+'</button>'
+      + '<button class="canto-btn canto-btn-b" id="cb-'+c.id+'">Copa +'+c.pts+'</button>'
+      + '</div></div>';
+  }
+  if (lastG) rows += '</div>';
+  return toggle + '<div class="cantos-panel">'+rows+'</div>';
+}
+
 /* ── WINNER ── */
 function tplWinner() {
   var rounds = S.round-1;
@@ -707,6 +784,13 @@ function bind() {
     on('addA'+v, function(){ addPts('ptsA', v); });
     on('addB'+v, function(){ addPts('ptsB', v); });
   });
+  on('btn-cantos', function(){ S.showCantos = !S.showCantos; render(); });
+  for (var ci=0; ci<CANTOS.length; ci++) {
+    (function(c){
+      on('ca-'+c.id, function(){ addPts('ptsA', c.pts); });
+      on('cb-'+c.id, function(){ addPts('ptsB', c.pts); });
+    })(CANTOS[ci]);
+  }
 }
 function addPts(key, v) {
   var cur = parseInt(S[key])||0;
@@ -731,7 +815,7 @@ function startGame() {
       screen:'game', target,
       players: names.map(function(name){ return {name:name,score:0}; }),
       round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
-      ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+      ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
   } else {
     var half=n/2, mA=[], mB=[];
@@ -741,7 +825,7 @@ function startGame() {
       screen:'game', target,
       players: names.map(function(name){ return {name:name,score:0}; }),
       teamScores:[0,0], teamAMembers:mA, teamBMembers:mB,
-      round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false,
+      round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
   }
   render();
@@ -785,7 +869,7 @@ function submitRound() {
 function goToMenu() {
   if (!confirm('¿Abandonar la partida y volver al menú?')) return;
   S = Object.assign({}, S, {
-    screen:'setup', winner:null, round:1, ptsA:'', ptsB:'', history:[], showHist:false,
+    screen:'setup', winner:null, round:1, ptsA:'', ptsB:'', history:[], showHist:false, showCantos:false,
     players: S.players.map(function(p){ return {name:p.name,score:0}; }), teamScores:[0,0],
   });
   render();
@@ -797,11 +881,11 @@ function playAgain() {
     S = Object.assign({}, S, { screen:'setup',
       players:S.players.map(function(p){return {name:p.name,score:0};}),
       round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
-      ptsA:'', ptsB:'', winner:null, history:[], showHist:false });
+      ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   } else {
     S = Object.assign({}, S, { screen:'setup',
       players:S.players.map(function(p){return {name:p.name,score:0};}),
-      teamScores:[0,0], round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false });
+      teamScores:[0,0], round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   }
   render();
 }
