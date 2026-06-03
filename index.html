@@ -162,6 +162,12 @@
     .game-header-row { display:flex; justify-content:space-between; align-items:center; }
     .gh-title { font-family:Georgia,serif; font-size:20px; font-weight:700; color:var(--gold-l);
       display:flex; align-items:center; gap:8px; }
+    .btn-back {
+      background:transparent; border:none; color:var(--gold-l); font-size:22px;
+      cursor:pointer; padding:4px 8px 4px 0; line-height:1; opacity:.75;
+      -webkit-appearance:none; transition:opacity .15s,transform .12s;
+    }
+    .btn-back:active { opacity:1; transform:scale(.85); }
     .pill {
       background:rgba(0,0,0,.3); border:1px solid rgba(227,179,65,.3); border-radius:20px;
       padding:5px 13px; font-size:13px; font-weight:700; color:var(--cream);
@@ -529,7 +535,10 @@ function tplSetup() {
 function tplGame() {
   var header = '<div class="game-header">'
     + '<div class="game-header-row">'
+    + '<div style="display:flex;align-items:center;gap:6px">'
+    + '<button class="btn-back" id="btn-menu">←</button>'
     + '<span class="gh-title">'+suit('basto',20,'#f6d97f')+' Truco</span>'
+    + '</div>'
     + '<span class="pill">Mano <b>'+S.round+'</b> · a <b>'+S.target+'</b></span>'
     + '</div>'
     + '</div>';
@@ -572,8 +581,6 @@ function tplGame() {
     + '</div>'
     + '<div class="game-footer">'
     + '<button class="btn btn-gold" id="btn-round">Anotar y seguir</button>'
-    + '<div style="height:9px"></div>'
-    + '<button class="btn btn-outline" id="btn-menu">Volver al menú</button>'
     + '</div>'
     + '</div>';
 }
