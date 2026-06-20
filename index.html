@@ -842,12 +842,14 @@ function tplWinner() {
   var rounds = S.round-1;
   var inner = '';
   if (isRotating()) {
-    var medals = ['🥇','🥈','🥉','4º','5º','6º','7º'];
+    var medals = ['🥇','🥈','🥉'];
     var sorted = S.players.map(function(p,i){ return {name:p.name,score:p.score,i:i}; })
                           .sort(function(a,b){ return b.score-a.score; });
     inner = sorted.map(function(p,rank){
+      var place = sorted.filter(function(o){ return o.score>p.score; }).length;
+      var medal = place<3 ? medals[place] : (place+1)+'º';
       return '<div class="final-row">'
-        + '<span class="final-rank">'+medals[rank]+'</span>'
+        + '<span class="final-rank">'+medal+'</span>'
         + '<em class="avatar c'+p.i+'">'+esc(initial(p.name,p.i+1))+'</em>'
         + '<div class="final-name">'+esc(p.name)+'</div>'
         + '<div class="final-pts t'+p.i+'">'+p.score+'</div>'
@@ -931,7 +933,7 @@ function tplStats() {
 
 /* ── BIND ── */
 function on(id, fn) { var el=q(id); if(el) el.addEventListener('click',fn); }
-function bindInput(id, key) { var el=q(id); if(el) el.addEventListener('input', function(){ S[key]=el.value; }); }
+function bindInput(id, key) { var el=q(id); if(el) el.addEventListener('input', function(){ S[key]=el.value; if(key==='ptsA'||key==='ptsB') maybeFinishLive(); }); }
 function bind() {
   on('btn-start', startGame);
   on('btn-round', submitRound);
@@ -971,6 +973,7 @@ function addPts(key, v) {
   var cur = parseInt(S[key])||0;
   S[key] = String(cur+v);
   var el = q(key); if(el) el.value = S[key];
+  maybeFinishLive();
 }
 
 /* ── ACTIONS ── */
@@ -1016,44 +1019,70 @@ function setSittingOut(idx) {
   S = Object.assign({}, S, { sittingOut:idx, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
   render();
 }
-function submitRound() {
-  var ptsA=Math.max(0,parseInt(val('ptsA'))||0);
-  var ptsB=Math.max(0,parseInt(val('ptsB'))||0);
-  var newHistory = S.history.concat([{ round:S.round, ptsA:ptsA, ptsB:ptsB,
-    sittingOut:S.sittingOut, teamA:S.teamA.slice(), teamB:S.teamB.slice() }]);
+/* Calcula el resultado de sumar (a,b) a la mano actual, sin mutar el estado.
+   Detecta si alguien alcanzó el objetivo y quién gana (en impar puede haber
+   co-ganadores si dos compañeros llegan al mismo puntaje máximo). */
+function computeOutcome(a, b) {
   if (isRotating()) {
     var np = S.players.map(function(p,i){
-      var g = S.teamA.indexOf(i)>=0?ptsA : S.teamB.indexOf(i)>=0?ptsB : 0;
+      var g = S.teamA.indexOf(i)>=0?a : S.teamB.indexOf(i)>=0?b : 0;
       return { name:p.name, score:p.score+g, id:p.id };
     });
     var mx = Math.max.apply(null, np.map(function(p){ return p.score; }));
-    if (mx>=S.target) {
-      var wp = np.filter(function(p){return p.score>=S.target;}).sort(function(a,b){return b.score-a.score;})[0];
-      recordGame({
-        mode:'rotativo', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
-        participants: np.filter(function(p){return p.id;}).map(function(p){return p.id;}),
-        winners: wp.id ? [wp.id] : [],
-      });
-      S = Object.assign({}, S, { players:np, history:newHistory, winner:wp.name, round:S.round+1, screen:'winner' });
-    } else {
-      var ns=(S.sittingOut+1)%S.numPlayers, t=computeTeams(ns);
-      S = Object.assign({}, S, { players:np, history:newHistory, round:S.round+1, sittingOut:ns, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
-    }
+    var won = mx >= S.target;
+    var winners = won ? np.filter(function(p){ return p.score===mx; }) : [];
+    return { mode:'rot', np:np, won:won, winners:winners };
+  }
+  var nts = [S.teamScores[0]+a, S.teamScores[1]+b];
+  return { mode:'team', nts:nts, won:Math.max(nts[0],nts[1])>=S.target, wi:(nts[0]>=nts[1]?0:1) };
+}
+function pushHistory(a, b) {
+  return S.history.concat([{ round:S.round, ptsA:a, ptsB:b,
+    sittingOut:S.sittingOut, teamA:S.teamA.slice(), teamB:S.teamB.slice() }]);
+}
+/* Cierra la partida con la mano actual (a,b): ya hay ganador. */
+function finishHand(a, b) {
+  var o = computeOutcome(a, b);
+  var newHistory = pushHistory(a, b);
+  if (o.mode==='rot') {
+    recordGame({
+      mode:'rotativo', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
+      participants: o.np.filter(function(p){return p.id;}).map(function(p){return p.id;}),
+      winners: o.winners.map(function(p){return p.id;}).filter(Boolean),
+    });
+    S = Object.assign({}, S, { players:o.np, history:newHistory,
+      winner:o.winners.map(function(p){return p.name;}).join(' y '), round:S.round+1, screen:'winner' });
   } else {
-    var nts=[S.teamScores[0]+ptsA, S.teamScores[1]+ptsB];
-    if (Math.max(nts[0],nts[1])>=S.target) {
-      var wi = nts[0]>=nts[1]?0:1;
-      var mem = wi===0?S.teamAMembers:S.teamBMembers;
-      var wn = 'Equipo '+(wi===0?'Oro':'Copa')+' — '+mem.map(function(i){return firstName(S.players[i].name);}).join(' + ');
-      recordGame({
-        mode:'equipos', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
-        participants: S.players.filter(function(p){return p.id;}).map(function(p){return p.id;}),
-        winners: mem.map(function(i){return S.players[i].id;}).filter(Boolean),
-      });
-      S = Object.assign({}, S, { teamScores:nts, history:newHistory, winner:wn, round:S.round+1, screen:'winner' });
-    } else {
-      S = Object.assign({}, S, { teamScores:nts, history:newHistory, round:S.round+1, dealer:(S.dealer+1)%S.numPlayers, ptsA:'', ptsB:'' });
-    }
+    var mem = o.wi===0?S.teamAMembers:S.teamBMembers;
+    var wn = 'Equipo '+(o.wi===0?'Oro':'Copa')+' — '+mem.map(function(i){return firstName(S.players[i].name);}).join(' + ');
+    recordGame({
+      mode:'equipos', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
+      participants: S.players.filter(function(p){return p.id;}).map(function(p){return p.id;}),
+      winners: mem.map(function(i){return S.players[i].id;}).filter(Boolean),
+    });
+    S = Object.assign({}, S, { teamScores:o.nts, history:newHistory, winner:wn, round:S.round+1, screen:'winner' });
+  }
+  render();
+}
+/* Chequeo en vivo: tras cada suma de puntos, si alguien ya llegó al objetivo
+   se termina la partida al instante (los puntos posteriores de la mano no se cargan). */
+function maybeFinishLive() {
+  var a=Math.max(0,parseInt(S.ptsA)||0), b=Math.max(0,parseInt(S.ptsB)||0);
+  if (computeOutcome(a, b).won) finishHand(a, b);
+}
+function submitRound() {
+  var a=Math.max(0,parseInt(val('ptsA'))||0);
+  var b=Math.max(0,parseInt(val('ptsB'))||0);
+  var o = computeOutcome(a, b);
+  if (o.won) { finishHand(a, b); return; }
+  var newHistory = pushHistory(a, b);
+  if (isRotating()) {
+    var ns=(S.sittingOut+1)%S.numPlayers, t=computeTeams(ns);
+    S = Object.assign({}, S, { players:o.np, history:newHistory, round:S.round+1,
+      sittingOut:ns, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
+  } else {
+    S = Object.assign({}, S, { teamScores:o.nts, history:newHistory, round:S.round+1,
+      dealer:(S.dealer+1)%S.numPlayers, ptsA:'', ptsB:'' });
   }
   render();
 }
