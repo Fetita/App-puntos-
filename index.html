@@ -410,7 +410,7 @@ var S = {
   screen:'setup', numPlayers:4, playerNames:[], target:30, round:1,
   ptsA:'', ptsB:'', winner:null, winnerTeam:null, history:[], showHist:false, showCantos:false,
   players:[], sittingOut:0, teamA:[], teamB:[],
-  teamScores:[0,0], teamAMembers:[], teamBMembers:[],
+  teamScores:[0,0], teamAMembers:[], teamBMembers:[], dealer:0,
 };
 
 var CANTOS = [
@@ -558,6 +558,7 @@ function splitSquares() {
 function render() {
   var app = document.getElementById('app');
   if (S.screen==='setup')  app.innerHTML = tplSetup();
+  if (S.screen==='pickDealer') app.innerHTML = tplPickDealer();
   if (S.screen==='game')   app.innerHTML = tplGame();
   if (S.screen==='winner') app.innerHTML = tplWinner();
   if (S.screen==='stats')  app.innerHTML = tplStats();
@@ -618,6 +619,28 @@ function tplSetup() {
     + '</div>'
     + '<button class="btn btn-gold" id="btn-start">Repartir cartas</button>'
     + '<button class="btn btn-outline" id="btn-stats" style="margin-top:10px">📊 Estadísticas</button>'
+    + '</div>';
+}
+
+/* ── ELEGIR REPARTIDOR (modos por equipos) ── */
+function tplPickDealer() {
+  var chips = S.players.map(function(p,i){
+    return '<button class="player-chip'+(i===S.dealer?' chip-active':'')+'" id="deal-'+i+'">'
+      + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'+esc(firstName(p.name))
+      + '</button>';
+  }).join('');
+  return '<div class="setup animate">'
+    + '<div class="watermark" style="top:40%;left:-30px">'+suit('basto',260,'#f4ead2')+'</div>'
+    + '<div class="logo">'
+    + '<div class="logo-suits">'+suitFan(30)+'</div>'
+    + '<h1>¿Quién <span class="accent">reparte</span>?</h1>'
+    + '<p>El que reparte rota una posición cada mano</p>'
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="card-label">'+suit('basto',14,'#f6d97f')+' Reparte la primera mano</div>'
+    + '<div class="sitting-chips">'+chips+'</div>'
+    + '</div>'
+    + '<button class="btn btn-gold" id="btn-deal-start">A jugar</button>'
     + '</div>';
 }
 
@@ -688,6 +711,7 @@ function tplScoreboardTeam() {
     + boardColumn('Oro', S.teamAMembers, S.teamScores[0], 'a')
     + boardColumn('Copa', S.teamBMembers, S.teamScores[1], 'b')
     + '</div>'
+    + '<div class="deal-hint">Reparte <b>'+esc(firstName(S.players[S.dealer].name))+'</b></div>'
     + '</div>';
 }
 function boardColumn(team, members, score, side) {
@@ -914,6 +938,10 @@ function bind() {
   on('btn-again', playAgain);
   on('btn-menu',  goToMenu);
   on('btn-stats', function(){ S = Object.assign({}, S, { screen:'stats' }); render(); });
+  on('btn-deal-start', function(){ S = Object.assign({}, S, { screen:'game' }); render(); });
+  for (var di=0; di<S.players.length; di++) {
+    (function(idx){ on('deal-'+idx, function(){ S = Object.assign({}, S, { dealer:idx }); render(); }); })(di);
+  }
   on('btn-stats-back', function(){ S = Object.assign({}, S, { screen:'setup' }); render(); });
   on('btn-stats-clear', function(){
     if (!confirm('¿Borrar todas las estadísticas? Esto no se puede deshacer.')) return;
@@ -975,9 +1003,9 @@ function startGame() {
     for (var i=0;i<half;i++) mA.push(i);
     for (var i=half;i<n;i++) mB.push(i);
     S = Object.assign({}, S, {
-      screen:'game', target, playerNames:rawNames.slice(),
+      screen:'pickDealer', target, playerNames:rawNames.slice(),
       players: mkPlayers(),
-      teamScores:[0,0], teamAMembers:mA, teamBMembers:mB,
+      teamScores:[0,0], teamAMembers:mA, teamBMembers:mB, dealer:0,
       round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
   }
@@ -1024,7 +1052,7 @@ function submitRound() {
       });
       S = Object.assign({}, S, { teamScores:nts, history:newHistory, winner:wn, round:S.round+1, screen:'winner' });
     } else {
-      S = Object.assign({}, S, { teamScores:nts, history:newHistory, round:S.round+1, ptsA:'', ptsB:'' });
+      S = Object.assign({}, S, { teamScores:nts, history:newHistory, round:S.round+1, dealer:(S.dealer+1)%S.numPlayers, ptsA:'', ptsB:'' });
     }
   }
   render();
