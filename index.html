@@ -367,6 +367,23 @@
     .canto-btn-a:active { background:rgba(227,179,65,.3); }
     .canto-btn-b { background:rgba(207,68,54,.14); border-color:rgba(207,68,54,.38); color:var(--red-l); }
     .canto-btn-b:active { background:rgba(207,68,54,.3); }
+
+    /* dealer ("reparte") indicators */
+    .deal-tag {
+      font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+      background:rgba(227,179,65,.16); color:var(--gold-l);
+      padding:2px 7px; border-radius:20px;
+    }
+    .deal-hint { margin-top:12px; font-size:12px; color:var(--cream-d); font-style:italic; line-height:1.5; }
+    .deal-hint b { color:var(--gold-l); font-style:normal; }
+
+    /* stats screen */
+    .stat-sub { display:block; font-size:11px; font-weight:400; color:var(--cream-d);
+      margin-top:2px; font-style:italic; }
+    .stats-empty { text-align:center; color:var(--cream-d); font-style:italic;
+      padding:22px 8px; line-height:1.6; }
+    .final-pts-label { display:block; font-size:9px; font-weight:700; text-transform:uppercase;
+      letter-spacing:1px; color:var(--cream-d); margin-top:1px; }
   </style>
 </head>
 <body>
@@ -413,8 +430,75 @@ var CANTOS = [
   {g:'Truco',  label:'Vale Cuatro no querido',   id:'c13', pts:3},
 ];
 
+/* ── PERSISTENCIA DE ESTADÍSTICAS (localStorage) ──
+   Guardado aparte del estado del juego. Estructura:
+   { players:[{id,name}], games:[{id,date,mode,numPlayers,target,rounds,participants:[id],winners:[id]}] } */
+var STORE_KEY = 'truco_stats_v1';
+function loadStore() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    var st = raw ? JSON.parse(raw) : null;
+    if (!st || typeof st !== 'object') st = {};
+    if (!Array.isArray(st.players)) st.players = [];
+    if (!Array.isArray(st.games))   st.games = [];
+    return st;
+  } catch (e) { return { players:[], games:[] }; }
+}
+function saveStore(st) {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(st)); } catch (e) {}
+}
+function normName(s) { return (s||'').trim().toLowerCase(); }
+function newId() { return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+/* Resuelve cada nombre tipeado a un id persistente del registro.
+   Nombres vacíos → null (jugador anónimo, no se registra en estadísticas). */
+function resolvePlayerIds(rawNames) {
+  var st = loadStore();
+  var ids = rawNames.map(function(name){
+    var key = normName(name);
+    if (!key) return null;
+    for (var i=0;i<st.players.length;i++) {
+      if (normName(st.players[i].name) === key) return st.players[i].id;
+    }
+    var id = newId();
+    st.players.push({ id:id, name:name.trim() });
+    return id;
+  });
+  saveStore(st);
+  return ids;
+}
+function recordGame(rec) {
+  var st = loadStore();
+  rec.id = newId();
+  rec.date = Date.now();
+  st.games.push(rec);
+  saveStore(st);
+}
+function computeStats() {
+  var st = loadStore();
+  var map = {};
+  st.players.forEach(function(p){ map[p.id] = { id:p.id, name:p.name, plays:0, wins:0 }; });
+  st.games.forEach(function(g){
+    (g.participants||[]).forEach(function(id){ if (map[id]) map[id].plays++; });
+    (g.winners||[]).forEach(function(id){ if (map[id]) map[id].wins++; });
+  });
+  var rows = Object.keys(map).map(function(k){ return map[k]; })
+    .filter(function(p){ return p.plays > 0; });
+  rows.sort(function(a,b){
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    var ra = a.plays ? a.wins/a.plays : 0, rb = b.plays ? b.wins/b.plays : 0;
+    if (rb !== ra) return rb - ra;
+    return b.plays - a.plays;
+  });
+  return { rows:rows, totalGames:st.games.length };
+}
+function clearStats() {
+  saveStore({ players:[], games:[] });
+}
+
 /* ── MODE ── */
 function isRotating() { return S.numPlayers % 2 === 1; }
+/* el que reparte: siempre a la derecha del que descansa */
+function dealerIndex() { return (S.sittingOut + 1) % S.numPlayers; }
 function modeHint(n) {
   if (n===2) return 'Mano a mano · 1 contra 1 · puntaje por equipo';
   if (n===3) return 'Rotativo 1 vs 1 · uno descansa · puntaje individual';
@@ -476,6 +560,7 @@ function render() {
   if (S.screen==='setup')  app.innerHTML = tplSetup();
   if (S.screen==='game')   app.innerHTML = tplGame();
   if (S.screen==='winner') app.innerHTML = tplWinner();
+  if (S.screen==='stats')  app.innerHTML = tplStats();
   bind();
 }
 
@@ -490,7 +575,7 @@ function tplSetup() {
   function row(i){
     return '<div class="player-row">'
       + '<em class="avatar c'+i+'">'+esc(initial(S.playerNames[i], i+1))+'</em>'
-      + '<input class="field" id="pn'+i+'" type="text" maxlength="18"'
+      + '<input class="field" id="pn'+i+'" type="text" maxlength="18" list="player-roster"'
       + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
       + '</div>';
   }
@@ -504,7 +589,11 @@ function tplSetup() {
     for (var i=half;i<n;i++) rows += row(i);
   }
 
+  var roster = loadStore().players
+    .map(function(p){ return '<option value="'+esc(p.name)+'"></option>'; }).join('');
+
   return '<div class="setup animate">'
+    + '<datalist id="player-roster">'+roster+'</datalist>'
     + '<div class="watermark" style="top:40%;left:-30px">'+suit('espada',260,'#f4ead2')+'</div>'
     + '<div class="logo">'
     + '<div class="logo-suits">'+suitFan(34)+'</div>'
@@ -528,6 +617,7 @@ function tplSetup() {
     + '</div>'
     + '</div>'
     + '<button class="btn btn-gold" id="btn-start">Repartir cartas</button>'
+    + '<button class="btn btn-outline" id="btn-stats" style="margin-top:10px">📊 Estadísticas</button>'
     + '</div>';
 }
 
@@ -619,12 +709,15 @@ function boardColumn(team, members, score, side) {
 /* rotating mode: per-player compact fósforos */
 function tplScoreboardRotating() {
   var sp = splitSquares();
+  var dealer = dealerIndex();
   var rows = S.players.map(function(p,i){
     var sitting = i===S.sittingOut;
     return '<div class="ind-row'+(sitting?' ind-sitting':'')+'">'
       + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'
       + '<div class="ind-info">'
-      + '<div class="ind-name">'+esc(p.name)+(sitting?' <span class="rest-tag">descansa</span>':'')+'</div>'
+      + '<div class="ind-name">'+esc(p.name)
+        +(sitting?' <span class="rest-tag">descansa</span>':'')
+        +(i===dealer?' <span class="deal-tag">reparte</span>':'')+'</div>'
       + '<div class="ind-squares">'+squaresRow(p.score, sp.total, 22)+'</div>'
       + '</div>'
       + '<div class="ind-num t'+i+'">'+p.score+'</div>'
@@ -645,9 +738,11 @@ function tplTeamsRotating() {
   var bCards = S.teamB.map(function(i){
     return '<div class="team-card team-b"><em class="avatar c'+i+'">'+esc(initial(S.players[i].name,i+1))+'</em>'+esc(firstName(S.players[i].name))+'</div>';
   }).join('');
+  var dealer = dealerIndex();
   return '<div class="card animate">'
     + '<div class="card-label">Quién descansa</div>'
     + '<div class="sitting-chips">'+chips+'</div>'
+    + '<div class="deal-hint">Reparte <b>'+esc(firstName(S.players[dealer].name))+'</b> · a la derecha del que descansa</div>'
     + '</div>'
     + '<div class="card animate">'
     + '<div class="card-label">Las parejas de esta mano</div>'
@@ -771,6 +866,45 @@ function confettiHtml() {
   return '<div class="confetti-wrap">'+dots+'</div>';
 }
 
+/* ── ESTADÍSTICAS ── */
+function tplStats() {
+  var data = computeStats();
+  var inner;
+  if (data.rows.length === 0) {
+    inner = '<div class="stats-empty">Todavía no hay partidas registradas.<br>Jugá una partida y volvé acá. 🃏</div>';
+  } else {
+    var medals = ['🥇','🥈','🥉'];
+    inner = data.rows.map(function(p,idx){
+      var pct = p.plays ? Math.round(p.wins/p.plays*100) : 0;
+      var rank = medals[idx] || (idx+1)+'º';
+      return '<div class="final-row">'
+        + '<span class="final-rank">'+rank+'</span>'
+        + '<em class="avatar c'+(idx%7)+'">'+esc(initial(p.name,idx+1))+'</em>'
+        + '<div class="final-name">'+esc(p.name)
+        +   '<span class="stat-sub">'+p.plays+' jugada'+(p.plays!==1?'s':'')+' · '+pct+'% victorias</span>'
+        + '</div>'
+        + '<div class="final-pts t'+(idx%7)+'">'+p.wins
+        +   '<span class="final-pts-label">ganada'+(p.wins!==1?'s':'')+'</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  return '<div class="setup animate">'
+    + '<div class="watermark" style="top:42%;right:-30px">'+suit('basto',260,'#f4ead2')+'</div>'
+    + '<div class="logo">'
+    + '<div class="logo-suits">'+suitFan(30)+'</div>'
+    + '<h1>Estad<span class="accent">í</span>sticas</h1>'
+    + '<p>'+data.totalGames+' partida'+(data.totalGames!==1?'s':'')+' jugada'+(data.totalGames!==1?'s':'')+'</p>'
+    + '</div>'
+    + '<div class="card">'
+    + '<div class="card-label">'+suit('oro',14,'#e3b341')+' Ranking · victorias</div>'
+    + '<div class="final-list">'+inner+'</div>'
+    + '</div>'
+    + '<button class="btn btn-gold" id="btn-stats-back">Volver al menú</button>'
+    + (data.rows.length ? '<button class="btn btn-outline" id="btn-stats-clear" style="margin-top:10px">Borrar estadísticas</button>' : '')
+    + '</div>';
+}
+
 /* ── BIND ── */
 function on(id, fn) { var el=q(id); if(el) el.addEventListener('click',fn); }
 function bindInput(id, key) { var el=q(id); if(el) el.addEventListener('input', function(){ S[key]=el.value; }); }
@@ -779,6 +913,12 @@ function bind() {
   on('btn-round', submitRound);
   on('btn-again', playAgain);
   on('btn-menu',  goToMenu);
+  on('btn-stats', function(){ S = Object.assign({}, S, { screen:'stats' }); render(); });
+  on('btn-stats-back', function(){ S = Object.assign({}, S, { screen:'setup' }); render(); });
+  on('btn-stats-clear', function(){
+    if (!confirm('¿Borrar todas las estadísticas? Esto no se puede deshacer.')) return;
+    clearStats(); render();
+  });
   on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
   [2,3,4,5,6,7].forEach(function(c){ on('cnt-'+c, function(){ setNumPlayers(c); }); });
   if (isRotating()) {
@@ -813,14 +953,20 @@ function setNumPlayers(n) {
   render();
 }
 function startGame() {
-  var n=S.numPlayers, names=[];
-  for (var i=0;i<n;i++) names.push((val('pn'+i)||'Jugador '+(i+1)).trim());
+  var n=S.numPlayers, rawNames=[], names=[];
+  for (var i=0;i<n;i++) {
+    var v=(val('pn'+i)||'').trim();
+    rawNames.push(v);
+    names.push(v || 'Jugador '+(i+1));
+  }
+  var ids = resolvePlayerIds(rawNames);
+  function mkPlayers(){ return names.map(function(name,i){ return {name:name,score:0,id:ids[i]}; }); }
   var target = Math.max(5, parseInt(val('tgt'))||30);
   if (isRotating()) {
     var sit0=n-1, t=computeTeams(sit0);
     S = Object.assign({}, S, {
-      screen:'game', target,
-      players: names.map(function(name){ return {name:name,score:0}; }),
+      screen:'game', target, playerNames:rawNames.slice(),
+      players: mkPlayers(),
       round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
@@ -829,8 +975,8 @@ function startGame() {
     for (var i=0;i<half;i++) mA.push(i);
     for (var i=half;i<n;i++) mB.push(i);
     S = Object.assign({}, S, {
-      screen:'game', target,
-      players: names.map(function(name){ return {name:name,score:0}; }),
+      screen:'game', target, playerNames:rawNames.slice(),
+      players: mkPlayers(),
       teamScores:[0,0], teamAMembers:mA, teamBMembers:mB,
       round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
@@ -850,11 +996,16 @@ function submitRound() {
   if (isRotating()) {
     var np = S.players.map(function(p,i){
       var g = S.teamA.indexOf(i)>=0?ptsA : S.teamB.indexOf(i)>=0?ptsB : 0;
-      return { name:p.name, score:p.score+g };
+      return { name:p.name, score:p.score+g, id:p.id };
     });
     var mx = Math.max.apply(null, np.map(function(p){ return p.score; }));
     if (mx>=S.target) {
       var wp = np.filter(function(p){return p.score>=S.target;}).sort(function(a,b){return b.score-a.score;})[0];
+      recordGame({
+        mode:'rotativo', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
+        participants: np.filter(function(p){return p.id;}).map(function(p){return p.id;}),
+        winners: wp.id ? [wp.id] : [],
+      });
       S = Object.assign({}, S, { players:np, history:newHistory, winner:wp.name, round:S.round+1, screen:'winner' });
     } else {
       var ns=(S.sittingOut+1)%S.numPlayers, t=computeTeams(ns);
@@ -866,6 +1017,11 @@ function submitRound() {
       var wi = nts[0]>=nts[1]?0:1;
       var mem = wi===0?S.teamAMembers:S.teamBMembers;
       var wn = 'Equipo '+(wi===0?'Oro':'Copa')+' — '+mem.map(function(i){return firstName(S.players[i].name);}).join(' + ');
+      recordGame({
+        mode:'equipos', numPlayers:S.numPlayers, target:S.target, rounds:newHistory.length,
+        participants: S.players.filter(function(p){return p.id;}).map(function(p){return p.id;}),
+        winners: mem.map(function(i){return S.players[i].id;}).filter(Boolean),
+      });
       S = Object.assign({}, S, { teamScores:nts, history:newHistory, winner:wn, round:S.round+1, screen:'winner' });
     } else {
       S = Object.assign({}, S, { teamScores:nts, history:newHistory, round:S.round+1, ptsA:'', ptsB:'' });
@@ -877,7 +1033,7 @@ function goToMenu() {
   if (!confirm('¿Abandonar la partida y volver al menú?')) return;
   S = Object.assign({}, S, {
     screen:'setup', winner:null, round:1, ptsA:'', ptsB:'', history:[], showHist:false, showCantos:false,
-    players: S.players.map(function(p){ return {name:p.name,score:0}; }), teamScores:[0,0],
+    players: S.players.map(function(p){ return {name:p.name,score:0,id:p.id}; }), teamScores:[0,0],
   });
   render();
 }
@@ -886,12 +1042,12 @@ function playAgain() {
   if (isRotating()) {
     var t=computeTeams(sit0);
     S = Object.assign({}, S, { screen:'setup',
-      players:S.players.map(function(p){return {name:p.name,score:0};}),
+      players:S.players.map(function(p){return {name:p.name,score:0,id:p.id};}),
       round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   } else {
     S = Object.assign({}, S, { screen:'setup',
-      players:S.players.map(function(p){return {name:p.name,score:0};}),
+      players:S.players.map(function(p){return {name:p.name,score:0,id:p.id};}),
       teamScores:[0,0], round:1, ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   }
   render();
