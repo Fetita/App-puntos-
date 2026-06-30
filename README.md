@@ -14,7 +14,7 @@ www/                 ← la app (esto es lo que se edita)
   manifest.webmanifest
   sw.js              ← service worker (offline)
   icons/             ← íconos PWA
-assets/              ← arte fuente (icon.svg, feature-graphic.svg) + master PNGs
+assets/              ← arte fuente del ícono (icon-source.webp → icon.png) + feature graphic
 android/             ← proyecto nativo Android (generado por Capacitor)
 store/               ← textos, capturas y política de privacidad para las tiendas
 capacitor.config.json

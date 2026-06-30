@@ -1,41 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
   <defs>
-    <radialGradient id="felt" cx="32%" cy="30%" r="95%">
+    <radialGradient id="felt" cx="34%" cy="32%" r="95%">
       <stop offset="0%" stop-color="#14654a"/>
       <stop offset="46%" stop-color="#0c4a36"/>
       <stop offset="100%" stop-color="#06301f"/>
     </radialGradient>
-    <radialGradient id="gold" cx="38%" cy="32%" r="75%">
-      <stop offset="0%" stop-color="#f6d97f"/>
-      <stop offset="55%" stop-color="#e3b341"/>
-      <stop offset="100%" stop-color="#b8862a"/>
-    </radialGradient>
-    <filter id="sh" x="-40%" y="-40%" width="180%" height="180%">
-      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000" flood-opacity="0.4"/>
-    </filter>
   </defs>
-
   <rect width="1024" height="500" fill="url(#felt)"/>
-  <!-- weave texture -->
-  <rect width="1024" height="500" fill="url(#felt)" opacity="0"/>
   <g opacity="0.06" stroke="#000" stroke-width="2">
     <path d="M0 0 L1024 1024 M-512 0 L512 1024 M512 0 L1536 1024"/>
   </g>
-
-  <!-- coin on the left -->
-  <g filter="url(#sh)" transform="translate(250,250)">
-    <circle r="158" fill="url(#gold)"/>
-    <circle r="158" fill="none" stroke="#9a6f22" stroke-width="8"/>
-    <circle r="122" fill="none" stroke="#7d5a1c" stroke-opacity="0.55" stroke-width="8"/>
-    <circle r="79" fill="none" stroke="#7d5a1c" stroke-opacity="0.55" stroke-width="8"/>
-    <circle r="18" fill="#7d5a1c" fill-opacity="0.7"/>
-  </g>
-
-  <!-- wordmark -->
-  <text x="470" y="225" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="700" fill="#f4ead2">Anotador</text>
-  <text x="470" y="305" font-family="Georgia, 'Times New Roman', serif" font-size="72" font-weight="700" fill="#e3b341">de Truco</text>
-  <text x="472" y="358" font-family="Georgia, 'Times New Roman', serif" font-size="27" font-style="italic" fill="#cdbf9e">Fósforos, malas y buenas · 2 a 7 jugadores</text>
-
-  <!-- gold underline accent -->
-  <rect x="472" y="378" width="300" height="4" rx="2" fill="#e3b341" opacity="0.6"/>
+  <!-- wordmark (icon is composited separately on the left) -->
+  <text x="500" y="222" font-family="Georgia, 'Times New Roman', serif" font-size="74" font-weight="700" fill="#f4ead2">Anotador</text>
+  <text x="500" y="306" font-family="Georgia, 'Times New Roman', serif" font-size="74" font-weight="700" fill="#e3b341">de Truco</text>
+  <text x="502" y="360" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-style="italic" fill="#cdbf9e">Fósforos, malas y buenas · 2 a 7 jugadores</text>
+  <rect x="502" y="380" width="300" height="4" rx="2" fill="#e3b341" opacity="0.6"/>
 </svg>
