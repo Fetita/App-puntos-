@@ -48,6 +48,11 @@ de las tiendas — pasos que requieren tus credenciales y, para iOS, una Mac.
 
 Esto se puede hacer **desde cualquier computadora** (incluida la tuya).
 
+> 🤖 **¿No querés instalar Android Studio?** Hay un workflow de GitHub Actions
+> (`.github/workflows/android-build.yml`) que compila la app en la nube y te da
+> el APK de prueba y el `.aab` firmado para subir. Ver **`CI_RELEASE.md`**. Si
+> preferís el camino manual, seguí los pasos de abajo.
+
 ### 2.1 Instalar herramientas (una sola vez)
 1. Instalá **Android Studio**: https://developer.android.com/studio
 2. Instalá un **JDK 17** (Android Studio ya trae uno).
