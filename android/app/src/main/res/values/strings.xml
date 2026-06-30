@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Anotador de Truco</string>
+    <string name="title_activity_main">Anotador de Truco</string>
+    <string name="package_name">com.anotadordetruco.app</string>
+    <string name="custom_url_scheme">com.anotadordetruco.app</string>
+</resources>

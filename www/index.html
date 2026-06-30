@@ -6,6 +6,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0c4a36">
+  <meta name="description" content="El anotador de Truco más lindo: fósforos, malas y buenas, envido y truco. De 2 a 7 jugadores. Funciona sin internet.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>Anotador de Truco</title>
   <style>
     *, *::before, *::after {
@@ -389,12 +394,34 @@ function suitFan(size) {
   }).join('');
 }
 
-var S = {
+var DEFAULT_STATE = {
   screen:'setup', numPlayers:4, playerNames:[], target:30, round:1,
   ptsA:'', ptsB:'', winner:null, winnerTeam:null, history:[], showHist:false, showCantos:false,
   players:[], sittingOut:0, teamA:[], teamB:[],
   teamScores:[0,0], teamAMembers:[], teamBMembers:[],
 };
+
+/* ── PERSISTENCE ──
+   Keeps the current game (or setup) alive across refreshes, app closes and
+   device restarts — essential at the card table where the app is backgrounded
+   constantly. We save the whole state on every render and restore it on boot. */
+var STORAGE_KEY = 'anotador-truco-v1';
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); } catch (e) {}
+}
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    var saved = JSON.parse(raw);
+    if (!saved || typeof saved !== 'object') return null;
+    /* merge over defaults so new fields added in future versions never break a
+       game saved by an older build */
+    return Object.assign({}, DEFAULT_STATE, saved);
+  } catch (e) { return null; }
+}
+
+var S = loadState() || Object.assign({}, DEFAULT_STATE);
 
 var CANTOS = [
   {g:'Envido', label:'Envido querido',          id:'c0',  pts:2},
@@ -477,6 +504,7 @@ function render() {
   if (S.screen==='game')   app.innerHTML = tplGame();
   if (S.screen==='winner') app.innerHTML = tplWinner();
   bind();
+  saveState();
 }
 
 /* ── SETUP ── */
@@ -902,6 +930,15 @@ function q(id)   { return document.getElementById(id); }
 function val(id) { var el=q(id); return el?el.value:''; }
 function firstName(name) { return (name||'').split(' ')[0]; }
 function esc(str) { var d=document.createElement('div'); d.appendChild(document.createTextNode(String(str))); return d.innerHTML; }
+
+/* ── OFFLINE / INSTALL ──
+   Register the service worker so the app loads with no internet (it's used at
+   the card table). Harmless on platforms without SW support. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 
 render();
 </script>
