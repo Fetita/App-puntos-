@@ -1,0 +1,53 @@
+name: Deploy PWA to Pages
+
+# Publica la app como sitio web para poder probarla desde el celular sin
+# instalar nada (se puede "Agregar a pantalla de inicio" y anda offline).
+# También publica la política de privacidad, que las dos tiendas piden como URL.
+#
+# Requiere, una sola vez: Settings → Pages → Source: "GitHub Actions".
+# El paso configure-pages intenta activarlo solo; si no puede, hacelo a mano.
+
+on:
+  push:
+    branches: [claude/app-store-playstore-launch-761qdm]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un despliegue por vez; si se encolan varios, gana el último.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Armar el sitio
+        run: |
+          mkdir -p site
+          cp -r www/. site/
+          cp store/privacidad.html site/privacidad.html
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Subir el sitio
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v4
