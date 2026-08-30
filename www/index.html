@@ -573,11 +573,15 @@ function picaStarted() {
   return S.mode==='pica' && S.players.some(function(p){ return p.score >= PICA_FROM; });
 }
 function isPicaHand() { return S.mode==='pica' && S.handKind==='pica'; }
-/* La mano que dispara el pica pica es común, así que la siguiente es pica y de
-   ahí en más van alternando. */
-function nextHandKind(scores) {
-  var reached = scores.some(function(s){ return s >= PICA_FROM; });
-  if (!reached) return 'comun';
+/* Después de que alguien llega a PICA_FROM todavía se juega una mano común, y
+   recién la siguiente es pica pica; de ahí en más van alternando. */
+function nextHandKind(scoresAfter) {
+  if (S.mode !== 'pica') return 'comun';
+  if (!scoresAfter.some(function(s){ return s >= PICA_FROM; })) return 'comun';
+  /* S todavía tiene el puntaje previo a esta mano: si el umbral se cruzó recién
+     ahora, la que viene es la común y el pica pica arranca en la de después */
+  var yaEstaba = S.players.some(function(p){ return p.score >= PICA_FROM; });
+  if (!yaEstaba) return 'comun';
   return S.handKind==='comun' ? 'pica' : 'comun';
 }
 /* Cada uno contra el de enfrente: partimos la mesa al medio y enfrentamos al
@@ -1158,9 +1162,7 @@ function tapSwap(i) {
 function advanceIndividual(np, newHistory) {
   var ns = restCount()>0 ? (S.sittingOut+1)%S.numPlayers : -1;
   var nsplit = (S.picaSplit||0) + 1;
-  var kind = S.mode==='pica'
-    ? nextHandKind(np.map(function(p){ return p.score; }))
-    : 'comun';
+  var kind = nextHandKind(np.map(function(p){ return p.score; }));
   var t = computeTeams(ns, nsplit);
   return { players:np, history:newHistory, round:S.round+1, handKind:kind,
     sittingOut:ns, picaSplit:nsplit, swapSel:null, picaPts:[],
