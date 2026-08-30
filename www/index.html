@@ -186,12 +186,6 @@
       font-family:Georgia,serif; font-style:italic; color:var(--cream-d);
       font-size:13px; padding-top:34px; flex-shrink:0;
     }
-    .btn-mezclar {
-      width:100%; margin-top:12px; padding:11px; background:rgba(0,0,0,.25);
-      border:1.5px solid var(--line); border-radius:11px; font-family:Georgia,serif;
-      font-size:14px; font-weight:700; color:var(--gold-l); cursor:pointer; -webkit-appearance:none;
-    }
-    .btn-mezclar:active { transform:scale(.97); }
 
     .player-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
     .player-row .avatar { width:42px; height:42px; font-size:17px; }
@@ -318,12 +312,6 @@
     .team-card.team-a { border-left:3px solid var(--gold); }
     .team-card.team-b { border-left:3px solid var(--red); }
     .team-card .avatar { width:30px; height:30px; font-size:13px; }
-    .team-card.tc-tap { cursor:pointer; }
-    .team-card.tc-tap:active { transform:scale(.96); }
-    .team-card.tc-sel {
-      background:linear-gradient(160deg,var(--gold-l),var(--gold)); color:var(--ink);
-      box-shadow:0 3px 10px rgba(227,179,65,.35);
-    }
 
     /* score inputs + steppers */
     .score-entry { display:flex; align-items:flex-start; gap:10px; }
@@ -461,7 +449,7 @@ var DEFAULT_STATE = {
   teamScores:[0,0], teamAMembers:[], teamBMembers:[],
   /* 'equipos' = puntaje por equipo | 'rotativo' = individual, uno descansa
      | 'pica' = pica pica (ver PICA_FROM y handKind) */
-  mode:'equipos', picaSplit:0, swapSel:null,
+  mode:'equipos',
   /* handKind: qué se juega esta mano — 'comun' (3 vs 3) o 'pica' (duelos).
      picaPts: puntos de la mano pica pica, uno por jugador. */
   handKind:'comun', picaPts:[],
@@ -547,27 +535,6 @@ function modeHint(n) {
   return '';
 }
 
-/* Las 10 formas distintas de partir 6 jugadores en dos tríos. Fijando siempre
-   al primero en el equipo Oro, cada división aparece una sola vez. */
-function splits6() {
-  var out = [];
-  for (var a=1;a<6;a++) for (var b=a+1;b<6;b++) {
-    var A = [0,a,b], B = [];
-    for (var k=0;k<6;k++) if (A.indexOf(k) < 0) B.push(k);
-    out.push([A,B]);
-  }
-  return out;
-}
-/* Pica pica: recorremos ese calendario en vez de sortear al azar, así todos
-   juegan con todos y no se repiten las mismas parejas. */
-function computeTeamsPica(sittingOut, splitIdx) {
-  var pool = [];
-  for (var i=0;i<S.numPlayers;i++) if (i !== sittingOut) pool.push(i);
-  var sp = splits6();
-  var s = sp[((splitIdx % sp.length) + sp.length) % sp.length];
-  var pick = function(k){ return pool[k]; };
-  return { teamA:s[0].map(pick), teamB:s[1].map(pick) };
-}
 /* ¿Ya hay alguien en PICA_FROM? A partir de ahí empiezan a alternar las manos. */
 function picaStarted() {
   return S.mode==='pica' && S.players.some(function(p){ return p.score >= PICA_FROM; });
@@ -593,10 +560,17 @@ function computeDuels(sittingOut) {
   for (var k=0;k<half;k++) d.push([pool[k], pool[k+half]]);
   return d;
 }
-function computeTeams(sittingOut, splitIdx) {
-  if (S.mode === 'pica') return computeTeamsPica(sittingOut, splitIdx||0);
+/* Los equipos salen de cómo están sentados: se recorre la mesa desde el que
+   sigue al que descansa y se van alternando, uno a cada equipo. Así nunca te
+   toca con el de al lado, y la rotación sale sola al correrse el descanso.
+   (Con 6 no descansa nadie: se recorre la mesa desde el primero.) */
+function computeTeams(sittingOut) {
   var n = S.numPlayers, rem = [];
-  for (var k=0;k<n-1;k++) rem.push((sittingOut+1+k)%n);
+  var start = sittingOut >= 0 ? sittingOut+1 : 0;
+  for (var k=0;k<n;k++) {
+    var idx = (start+k)%n;
+    if (idx !== sittingOut) rem.push(idx);
+  }
   var a=[], b=[];
   for (var j=0;j<rem.length;j++) { (j%2===0?a:b).push(rem[j]); }
   return { teamA:a, teamB:b };
@@ -700,6 +674,9 @@ function tplSetup() {
     + '</div>'
     + '<div class="card">'
     + '<div class="card-label">Jugadores</div>'
+    + (S.mode==='pica'
+        ? '<div class="swap-hint">Cargalos en el orden en que están sentados en la mesa: de ahí salen los equipos y quién juega contra quién.</div>'
+        : '')
     + rows
     + '</div>'
     + '<div class="card">'
@@ -864,12 +841,10 @@ function tplScoreboardRotating() {
 
 function tplTeamsRotating() {
   var pica = S.mode === 'pica';
-  /* en pica pica las cartas son tocables: tocás uno de cada equipo y se
-     intercambian, así los tríos siguen parejos */
+  /* los equipos los define la mesa, no se tocan a mano: lo único que se puede
+     cambiar es quién descansa, y de ahí se recalculan solos */
   function card(i, side) {
-    var sel = pica && S.swapSel === i;
-    return '<div class="team-card team-'+side+(pica?' tc-tap':'')+(sel?' tc-sel':'')+'"'
-      + (pica ? ' id="sw-'+i+'"' : '') + '>'
+    return '<div class="team-card team-'+side+'">'
       + '<em class="avatar c'+i+'">'+esc(initial(S.players[i].name,i+1))+'</em>'
       + esc(firstName(S.players[i].name))+'</div>';
   }
@@ -901,13 +876,12 @@ function tplTeamsRotating() {
     + '<div class="card animate">'
     + '<div class="card-label">Las parejas de esta mano</div>'
     + phase
-    + (pica ? '<div class="swap-hint">Tocá un jugador de cada equipo para intercambiarlos.</div>' : '')
     + '<div class="teams-grid">'
     + '<div class="team-col"><div class="team-header team-a-hdr">'+suit('oro',15,'#e3b341')+' Oro</div>'+aCards+'</div>'
     + '<div class="vs-col">vs</div>'
     + '<div class="team-col"><div class="team-header team-b-hdr">'+suit('copa',15,'#cf4436')+' Copa</div>'+bCards+'</div>'
     + '</div>'
-    + (pica ? '<button class="btn-mezclar" id="btn-mezclar">🔀 Mezclar las parejas</button>' : '')
+    + (pica ? '<div class="swap-hint" style="margin:12px 0 0">Los equipos se arman alternando alrededor de la mesa: nunca te toca con el de al lado.</div>' : '')
     + '</div>';
 }
 
@@ -1049,12 +1023,6 @@ function bind() {
       (function(idx){ on('sit-'+idx, function(){ setSittingOut(idx); }); })(i);
     }
   }
-  if (S.mode==='pica' && !isPicaHand()) {
-    on('btn-mezclar', mezclar);
-    for (var si=0; si<S.numPlayers; si++) {
-      (function(idx){ on('sw-'+idx, function(){ tapSwap(idx); }); })(si);
-    }
-  }
   if (isPicaHand()) {
     for (var di=0; di<S.numPlayers; di++) {
       (function(idx){
@@ -1109,11 +1077,11 @@ function startGame() {
   var target = Math.max(5, parseInt(val('tgt'))||30);
   if (isIndividual()) {
     var sit0 = restCount()>0 ? n-1 : -1;
-    var t = computeTeams(sit0, 0);
+    var t = computeTeams(sit0);
     S = Object.assign({}, S, {
       screen:'game', target,
       players: names.map(function(name){ return {name:name,score:0}; }),
-      round:1, sittingOut:sit0, picaSplit:0, swapSel:null, teamA:t.teamA, teamB:t.teamB,
+      round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
       handKind:'comun', picaPts:[],
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
@@ -1131,41 +1099,18 @@ function startGame() {
   render();
 }
 function setSittingOut(idx) {
-  var t=computeTeams(idx, S.picaSplit);
-  S = Object.assign({}, S, { sittingOut:idx, swapSel:null, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
-  render();
-}
-/* Mezclar = pasar a la próxima división del calendario, sin tocar el puntaje */
-function mezclar() {
-  var nsplit = (S.picaSplit||0) + 1;
-  var t = computeTeams(S.sittingOut, nsplit);
-  S = Object.assign({}, S, { picaSplit:nsplit, swapSel:null, teamA:t.teamA, teamB:t.teamB });
-  render();
-}
-/* Primer toque marca al jugador; el segundo, sobre alguien del otro equipo,
-   los intercambia. Tocar dos del mismo equipo sólo mueve la marca. */
-function tapSwap(i) {
-  var sel = S.swapSel;
-  if (sel === null || sel === undefined) { S = Object.assign({}, S, { swapSel:i }); render(); return; }
-  if (sel === i) { S = Object.assign({}, S, { swapSel:null }); render(); return; }
-  var a = S.teamA.slice(), b = S.teamB.slice();
-  var ia = a.indexOf(sel), ib = b.indexOf(sel);
-  var ja = a.indexOf(i),   jb = b.indexOf(i);
-  if (ia>=0 && jb>=0)      { a[ia]=i; b[jb]=sel; }
-  else if (ib>=0 && ja>=0) { b[ib]=i; a[ja]=sel; }
-  else { S = Object.assign({}, S, { swapSel:i }); render(); return; }
-  S = Object.assign({}, S, { teamA:a, teamB:b, swapSel:null });
+  var t=computeTeams(idx);
+  S = Object.assign({}, S, { sittingOut:idx, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
   render();
 }
 /* Prepara la mano siguiente en los modos de puntaje individual: rota el
    descanso, rearma los equipos y decide si la próxima es común o pica pica. */
 function advanceIndividual(np, newHistory) {
   var ns = restCount()>0 ? (S.sittingOut+1)%S.numPlayers : -1;
-  var nsplit = (S.picaSplit||0) + 1;
   var kind = nextHandKind(np.map(function(p){ return p.score; }));
-  var t = computeTeams(ns, nsplit);
+  var t = computeTeams(ns);
   return { players:np, history:newHistory, round:S.round+1, handKind:kind,
-    sittingOut:ns, picaSplit:nsplit, swapSel:null, picaPts:[],
+    sittingOut:ns, picaPts:[],
     teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' };
 }
 
@@ -1236,10 +1181,10 @@ function goToMenu() {
 function playAgain() {
   if (isIndividual()) {
     var sit0 = restCount()>0 ? S.numPlayers-1 : -1;
-    var t=computeTeams(sit0, 0);
+    var t=computeTeams(sit0);
     S = Object.assign({}, S, { screen:'setup',
       players:S.players.map(function(p){return {name:p.name,score:0};}),
-      round:1, sittingOut:sit0, picaSplit:0, swapSel:null, teamA:t.teamA, teamB:t.teamB,
+      round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
       handKind:'comun', picaPts:[],
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   } else {
