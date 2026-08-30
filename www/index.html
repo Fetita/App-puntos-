@@ -138,6 +138,25 @@
       text-align:center; font-size:13px; color:var(--cream-d); margin-top:12px;
       line-height:1.5; font-style:italic;
     }
+    .mode-selector { display:flex; gap:7px; margin-top:12px; }
+    .mode-btn {
+      flex:1; padding:11px 6px; background:rgba(0,0,0,.25); border:1.5px solid var(--line);
+      border-radius:11px; font-family:Georgia,serif; font-size:15px; font-weight:700;
+      color:var(--cream-d); cursor:pointer; -webkit-appearance:none; transition:all .15s;
+    }
+    .mode-btn.mode-active {
+      background:linear-gradient(160deg,var(--gold-l),var(--gold));
+      border-color:var(--gold-l); color:var(--ink);
+      box-shadow:0 3px 10px rgba(227,179,65,.35);
+    }
+    .mode-btn:active { transform:scale(.94); }
+    .swap-hint { font-size:12px; color:var(--cream-d); font-style:italic; margin-bottom:10px; }
+    .btn-mezclar {
+      width:100%; margin-top:12px; padding:11px; background:rgba(0,0,0,.25);
+      border:1.5px solid var(--line); border-radius:11px; font-family:Georgia,serif;
+      font-size:14px; font-weight:700; color:var(--gold-l); cursor:pointer; -webkit-appearance:none;
+    }
+    .btn-mezclar:active { transform:scale(.97); }
 
     .player-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
     .player-row .avatar { width:42px; height:42px; font-size:17px; }
@@ -264,6 +283,12 @@
     .team-card.team-a { border-left:3px solid var(--gold); }
     .team-card.team-b { border-left:3px solid var(--red); }
     .team-card .avatar { width:30px; height:30px; font-size:13px; }
+    .team-card.tc-tap { cursor:pointer; }
+    .team-card.tc-tap:active { transform:scale(.96); }
+    .team-card.tc-sel {
+      background:linear-gradient(160deg,var(--gold-l),var(--gold)); color:var(--ink);
+      box-shadow:0 3px 10px rgba(227,179,65,.35);
+    }
 
     /* score inputs + steppers */
     .score-entry { display:flex; align-items:flex-start; gap:10px; }
@@ -399,6 +424,9 @@ var DEFAULT_STATE = {
   ptsA:'', ptsB:'', winner:null, winnerTeam:null, history:[], showHist:false, showCantos:false,
   players:[], sittingOut:0, teamA:[], teamB:[],
   teamScores:[0,0], teamAMembers:[], teamBMembers:[],
+  /* 'equipos' = puntaje por equipo | 'rotativo' = individual, uno descansa
+     | 'pica' = pica pica: individual y las parejas se rearman cada mano */
+  mode:'equipos', picaSplit:0, swapSel:null,
 };
 
 /* ── PERSISTENCE ──
@@ -415,6 +443,9 @@ function loadState() {
     if (!raw) return null;
     var saved = JSON.parse(raw);
     if (!saved || typeof saved !== 'object') return null;
+    /* partidas guardadas antes de que existiera el modo explícito: el modo se
+       deducía de la paridad, así que lo reconstruimos igual y no se pierde nada */
+    if (!saved.mode) saved.mode = defaultModeFor(saved.numPlayers || DEFAULT_STATE.numPlayers);
     /* merge over defaults so new fields added in future versions never break a
        game saved by an older build */
     return Object.assign({}, DEFAULT_STATE, saved);
@@ -441,8 +472,30 @@ var CANTOS = [
 ];
 
 /* ── MODE ── */
-function isRotating() { return S.numPlayers % 2 === 1; }
+/* El modo ya no se deduce de la paridad: se elige. Estas dos preguntas son
+   distintas y hay que hacerlas por separado — en pica pica de 6 el puntaje es
+   individual PERO no descansa nadie. */
+function isIndividual() { return S.mode !== 'equipos'; }
+function restCount()    { return S.mode === 'equipos' ? 0 : (S.numPlayers % 2); }
+
+function defaultModeFor(n) { return n % 2 === 1 ? 'rotativo' : 'equipos'; }
+/* Pica pica necesita 6 jugadores en cancha (3 vs 3), así que aplica a 6 (no
+   descansa nadie) y a 7 (descansa uno). */
+function modesFor(n) {
+  if (n === 6) return ['equipos','pica'];
+  if (n === 7) return ['rotativo','pica'];
+  return [defaultModeFor(n)];
+}
+function modeLabel(m) {
+  if (m === 'pica') return 'Pica pica';
+  if (m === 'rotativo') return 'Rotativo';
+  return '3 vs 3';
+}
 function modeHint(n) {
+  if (S.mode === 'pica') {
+    return n===6 ? 'Pica pica · 3 vs 3 · las parejas cambian cada mano · puntaje individual'
+                 : 'Pica pica · 3 vs 3 · uno descansa y las parejas cambian cada mano · puntaje individual';
+  }
   if (n===2) return 'Mano a mano · 1 contra 1 · puntaje por equipo';
   if (n===3) return 'Rotativo 1 vs 1 · uno descansa · puntaje individual';
   if (n===4) return 'Clásico · 2 contra 2 · puntaje por equipo';
@@ -451,7 +504,30 @@ function modeHint(n) {
   if (n===7) return 'Rotativo 3 vs 3 · uno descansa · puntaje individual';
   return '';
 }
-function computeTeams(sittingOut) {
+
+/* Las 10 formas distintas de partir 6 jugadores en dos tríos. Fijando siempre
+   al primero en el equipo Oro, cada división aparece una sola vez. */
+function splits6() {
+  var out = [];
+  for (var a=1;a<6;a++) for (var b=a+1;b<6;b++) {
+    var A = [0,a,b], B = [];
+    for (var k=0;k<6;k++) if (A.indexOf(k) < 0) B.push(k);
+    out.push([A,B]);
+  }
+  return out;
+}
+/* Pica pica: recorremos ese calendario en vez de sortear al azar, así todos
+   juegan con todos y no se repiten las mismas parejas. */
+function computeTeamsPica(sittingOut, splitIdx) {
+  var pool = [];
+  for (var i=0;i<S.numPlayers;i++) if (i !== sittingOut) pool.push(i);
+  var sp = splits6();
+  var s = sp[((splitIdx % sp.length) + sp.length) % sp.length];
+  var pick = function(k){ return pool[k]; };
+  return { teamA:s[0].map(pick), teamB:s[1].map(pick) };
+}
+function computeTeams(sittingOut, splitIdx) {
+  if (S.mode === 'pica') return computeTeamsPica(sittingOut, splitIdx||0);
   var n = S.numPlayers, rem = [];
   for (var k=0;k<n-1;k++) rem.push((sittingOut+1+k)%n);
   var a=[], b=[];
@@ -508,6 +584,16 @@ function render() {
 }
 
 /* ── SETUP ── */
+/* Sólo con 6 o 7 hay algo para elegir; con el resto el modo es uno solo y no
+   mostramos un selector de una sola opción. */
+function modeSelector(n) {
+  var ms = modesFor(n);
+  if (ms.length < 2) return '';
+  return '<div class="mode-selector">' + ms.map(function(m){
+    return '<button class="mode-btn'+(m===S.mode?' mode-active':'')+'" id="mode-'+m+'">'
+      + modeLabel(m) + '</button>';
+  }).join('') + '</div>';
+}
 function tplSetup() {
   var n = S.numPlayers;
   var countBtns = [2,3,4,5,6,7].map(function(c){
@@ -522,7 +608,7 @@ function tplSetup() {
       + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
       + '</div>';
   }
-  if (isRotating()) {
+  if (isIndividual()) {
     for (var i=0;i<n;i++) rows += row(i);
   } else {
     var half=n/2;
@@ -542,6 +628,7 @@ function tplSetup() {
     + '<div class="card">'
     + '<div class="card-label">Cuántos somos</div>'
     + '<div class="count-selector">'+countBtns+'</div>'
+    + modeSelector(n)
     + '<div class="mode-hint">'+modeHint(n)+'</div>'
     + '</div>'
     + '<div class="card">'
@@ -571,8 +658,8 @@ function tplGame() {
     + '</div>'
     + '</div>';
 
-  var scoreSection = isRotating() ? tplScoreboardRotating() : tplScoreboardTeam();
-  var teamsSection = isRotating() ? tplTeamsRotating() : '';
+  var scoreSection = isIndividual() ? tplScoreboardRotating() : tplScoreboardTeam();
+  var teamsSection = isIndividual() ? tplTeamsRotating() : '';
 
   return '<div class="game">'
     + header
@@ -583,7 +670,7 @@ function tplGame() {
     + '<div class="card-label">Anotar la mano</div>'
     + '<div class="score-entry">'
     + '<div class="score-col">'
-    + '<div class="se-label se-a">'+(isRotating()?'Equipo Oro':teamShort(S.teamAMembers,'Oro'))+'</div>'
+    + '<div class="se-label se-a">'+(isIndividual()?'Equipo Oro':teamShort(S.teamAMembers,'Oro'))+'</div>'
     + '<input class="big-input ia" id="ptsA" type="number" min="0" max="9999" inputmode="numeric" placeholder="0" value="'+S.ptsA+'">'
     + '<div class="steppers">'
     +   '<button class="step-btn step-a" id="addA1">+1</button>'
@@ -593,7 +680,7 @@ function tplGame() {
     + '</div>'
     + '<div class="score-vs">vs</div>'
     + '<div class="score-col">'
-    + '<div class="se-label se-b">'+(isRotating()?'Equipo Copa':teamShort(S.teamBMembers,'Copa'))+'</div>'
+    + '<div class="se-label se-b">'+(isIndividual()?'Equipo Copa':teamShort(S.teamBMembers,'Copa'))+'</div>'
     + '<input class="big-input ib" id="ptsB" type="number" min="0" max="9999" inputmode="numeric" placeholder="0" value="'+S.ptsB+'">'
     + '<div class="steppers">'
     +   '<button class="step-btn step-b" id="addB1">+1</button>'
@@ -648,7 +735,7 @@ function boardColumn(team, members, score, side) {
 function tplScoreboardRotating() {
   var sp = splitSquares();
   var rows = S.players.map(function(p,i){
-    var sitting = i===S.sittingOut;
+    var sitting = restCount()>0 && i===S.sittingOut;
     return '<div class="ind-row'+(sitting?' ind-sitting':'')+'">'
       + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'
       + '<div class="ind-info">'
@@ -662,39 +749,52 @@ function tplScoreboardRotating() {
 }
 
 function tplTeamsRotating() {
-  var chips = S.players.map(function(p,i){
-    return '<button class="player-chip'+(i===S.sittingOut?' chip-active':'')+'" id="sit-'+i+'">'
-      + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'+esc(firstName(p.name))
-      + '</button>';
-  }).join('');
-  var aCards = S.teamA.map(function(i){
-    return '<div class="team-card team-a"><em class="avatar c'+i+'">'+esc(initial(S.players[i].name,i+1))+'</em>'+esc(firstName(S.players[i].name))+'</div>';
-  }).join('');
-  var bCards = S.teamB.map(function(i){
-    return '<div class="team-card team-b"><em class="avatar c'+i+'">'+esc(initial(S.players[i].name,i+1))+'</em>'+esc(firstName(S.players[i].name))+'</div>';
-  }).join('');
-  return '<div class="card animate">'
-    + '<div class="card-label">Quién descansa</div>'
-    + '<div class="sitting-chips">'+chips+'</div>'
-    + '</div>'
+  var pica = S.mode === 'pica';
+  /* en pica pica las cartas son tocables: tocás uno de cada equipo y se
+     intercambian, así los tríos siguen parejos */
+  function card(i, side) {
+    var sel = pica && S.swapSel === i;
+    return '<div class="team-card team-'+side+(pica?' tc-tap':'')+(sel?' tc-sel':'')+'"'
+      + (pica ? ' id="sw-'+i+'"' : '') + '>'
+      + '<em class="avatar c'+i+'">'+esc(initial(S.players[i].name,i+1))+'</em>'
+      + esc(firstName(S.players[i].name))+'</div>';
+  }
+  var aCards = S.teamA.map(function(i){ return card(i,'a'); }).join('');
+  var bCards = S.teamB.map(function(i){ return card(i,'b'); }).join('');
+
+  /* con 6 en pica pica no descansa nadie, así que esa tarjeta no va */
+  var restCard = restCount() > 0
+    ? '<div class="card animate">'
+      + '<div class="card-label">Quién descansa</div>'
+      + '<div class="sitting-chips">' + S.players.map(function(p,i){
+          return '<button class="player-chip'+(i===S.sittingOut?' chip-active':'')+'" id="sit-'+i+'">'
+            + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'+esc(firstName(p.name))
+            + '</button>';
+        }).join('')
+      + '</div></div>'
+    : '';
+
+  return restCard
     + '<div class="card animate">'
     + '<div class="card-label">Las parejas de esta mano</div>'
+    + (pica ? '<div class="swap-hint">Tocá un jugador de cada equipo para intercambiarlos.</div>' : '')
     + '<div class="teams-grid">'
     + '<div class="team-col"><div class="team-header team-a-hdr">'+suit('oro',15,'#e3b341')+' Oro</div>'+aCards+'</div>'
     + '<div class="vs-col">vs</div>'
     + '<div class="team-col"><div class="team-header team-b-hdr">'+suit('copa',15,'#cf4436')+' Copa</div>'+bCards+'</div>'
     + '</div>'
+    + (pica ? '<button class="btn-mezclar" id="btn-mezclar">🔀 Mezclar las parejas</button>' : '')
     + '</div>';
 }
 
 function tplHistory() {
   if (S.history.length===0) return '';
   var inner = '';
-  if (isRotating()) {
+  if (isIndividual()) {
     var ths = S.players.map(function(p){ return '<th>'+esc(firstName(p.name))+'</th>'; }).join('');
     var trs = S.history.map(function(h){
       var tds = S.players.map(function(_,i){
-        if (i===h.sittingOut) return '<td class="td-rest">·</td>';
+        if (h.sittingOut>=0 && i===h.sittingOut) return '<td class="td-rest">·</td>';
         var inA = h.teamA.indexOf(i)>=0;
         var pts = inA ? h.ptsA : h.ptsB;
         var isWin = pts===Math.max(h.ptsA,h.ptsB) && h.ptsA!==h.ptsB;
@@ -750,7 +850,7 @@ function tplCantos() {
 function tplWinner() {
   var rounds = S.round-1;
   var inner = '';
-  if (isRotating()) {
+  if (isIndividual()) {
     var medals = ['🥇','🥈','🥉','4º','5º','6º','7º'];
     var sorted = S.players.map(function(p,i){ return {name:p.name,score:p.score,i:i}; })
                           .sort(function(a,b){ return b.score-a.score; });
@@ -809,9 +909,16 @@ function bind() {
   on('btn-menu',  goToMenu);
   on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
   [2,3,4,5,6,7].forEach(function(c){ on('cnt-'+c, function(){ setNumPlayers(c); }); });
-  if (isRotating()) {
+  ['equipos','rotativo','pica'].forEach(function(m){ on('mode-'+m, function(){ setMode(m); }); });
+  if (isIndividual() && restCount()>0) {
     for (var i=0;i<S.numPlayers;i++) {
       (function(idx){ on('sit-'+idx, function(){ setSittingOut(idx); }); })(i);
+    }
+  }
+  if (S.mode==='pica') {
+    on('btn-mezclar', mezclar);
+    for (var si=0; si<S.numPlayers; si++) {
+      (function(idx){ on('sw-'+idx, function(){ tapSwap(idx); }); })(si);
     }
   }
   bindInput('ptsA','ptsA'); bindInput('ptsB','ptsB');
@@ -837,19 +944,28 @@ function addPts(key, v) {
 function setNumPlayers(n) {
   var cur=[];
   for (var i=0;i<S.numPlayers;i++) { var el=q('pn'+i); cur[i]=el?el.value:(S.playerNames[i]||''); }
-  S = Object.assign({}, S, { numPlayers:n, playerNames:cur });
+  /* si el modo elegido no existe para la cantidad nueva (ej. venías de pica
+     pica y bajás a 4), volvemos al modo por defecto de esa cantidad */
+  var ms = modesFor(n);
+  var mode = ms.indexOf(S.mode) >= 0 ? S.mode : ms[0];
+  S = Object.assign({}, S, { numPlayers:n, playerNames:cur, mode:mode });
+  render();
+}
+function setMode(m) {
+  S = Object.assign({}, S, { mode:m });
   render();
 }
 function startGame() {
   var n=S.numPlayers, names=[];
   for (var i=0;i<n;i++) names.push((val('pn'+i)||'Jugador '+(i+1)).trim());
   var target = Math.max(5, parseInt(val('tgt'))||30);
-  if (isRotating()) {
-    var sit0=n-1, t=computeTeams(sit0);
+  if (isIndividual()) {
+    var sit0 = restCount()>0 ? n-1 : -1;
+    var t = computeTeams(sit0, 0);
     S = Object.assign({}, S, {
       screen:'game', target,
       players: names.map(function(name){ return {name:name,score:0}; }),
-      round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
+      round:1, sittingOut:sit0, picaSplit:0, swapSel:null, teamA:t.teamA, teamB:t.teamB,
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false,
     });
   } else {
@@ -866,8 +982,30 @@ function startGame() {
   render();
 }
 function setSittingOut(idx) {
-  var t=computeTeams(idx);
-  S = Object.assign({}, S, { sittingOut:idx, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
+  var t=computeTeams(idx, S.picaSplit);
+  S = Object.assign({}, S, { sittingOut:idx, swapSel:null, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
+  render();
+}
+/* Mezclar = pasar a la próxima división del calendario, sin tocar el puntaje */
+function mezclar() {
+  var nsplit = (S.picaSplit||0) + 1;
+  var t = computeTeams(S.sittingOut, nsplit);
+  S = Object.assign({}, S, { picaSplit:nsplit, swapSel:null, teamA:t.teamA, teamB:t.teamB });
+  render();
+}
+/* Primer toque marca al jugador; el segundo, sobre alguien del otro equipo,
+   los intercambia. Tocar dos del mismo equipo sólo mueve la marca. */
+function tapSwap(i) {
+  var sel = S.swapSel;
+  if (sel === null || sel === undefined) { S = Object.assign({}, S, { swapSel:i }); render(); return; }
+  if (sel === i) { S = Object.assign({}, S, { swapSel:null }); render(); return; }
+  var a = S.teamA.slice(), b = S.teamB.slice();
+  var ia = a.indexOf(sel), ib = b.indexOf(sel);
+  var ja = a.indexOf(i),   jb = b.indexOf(i);
+  if (ia>=0 && jb>=0)      { a[ia]=i; b[jb]=sel; }
+  else if (ib>=0 && ja>=0) { b[ib]=i; a[ja]=sel; }
+  else { S = Object.assign({}, S, { swapSel:i }); render(); return; }
+  S = Object.assign({}, S, { teamA:a, teamB:b, swapSel:null });
   render();
 }
 function submitRound() {
@@ -875,7 +1013,7 @@ function submitRound() {
   var ptsB=Math.max(0,parseInt(val('ptsB'))||0);
   var newHistory = S.history.concat([{ round:S.round, ptsA:ptsA, ptsB:ptsB,
     sittingOut:S.sittingOut, teamA:S.teamA.slice(), teamB:S.teamB.slice() }]);
-  if (isRotating()) {
+  if (isIndividual()) {
     var np = S.players.map(function(p,i){
       var g = S.teamA.indexOf(i)>=0?ptsA : S.teamB.indexOf(i)>=0?ptsB : 0;
       return { name:p.name, score:p.score+g };
@@ -885,8 +1023,11 @@ function submitRound() {
       var wp = np.filter(function(p){return p.score>=S.target;}).sort(function(a,b){return b.score-a.score;})[0];
       S = Object.assign({}, S, { players:np, history:newHistory, winner:wp.name, round:S.round+1, screen:'winner' });
     } else {
-      var ns=(S.sittingOut+1)%S.numPlayers, t=computeTeams(ns);
-      S = Object.assign({}, S, { players:np, history:newHistory, round:S.round+1, sittingOut:ns, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
+      var ns = restCount()>0 ? (S.sittingOut+1)%S.numPlayers : -1;
+      var nsplit = (S.picaSplit||0) + 1;
+      var t = computeTeams(ns, nsplit);
+      S = Object.assign({}, S, { players:np, history:newHistory, round:S.round+1,
+        sittingOut:ns, picaSplit:nsplit, swapSel:null, teamA:t.teamA, teamB:t.teamB, ptsA:'', ptsB:'' });
     }
   } else {
     var nts=[S.teamScores[0]+ptsA, S.teamScores[1]+ptsB];
@@ -910,12 +1051,12 @@ function goToMenu() {
   render();
 }
 function playAgain() {
-  var sit0=S.numPlayers-1;
-  if (isRotating()) {
-    var t=computeTeams(sit0);
+  if (isIndividual()) {
+    var sit0 = restCount()>0 ? S.numPlayers-1 : -1;
+    var t=computeTeams(sit0, 0);
     S = Object.assign({}, S, { screen:'setup',
       players:S.players.map(function(p){return {name:p.name,score:0};}),
-      round:1, sittingOut:sit0, teamA:t.teamA, teamB:t.teamB,
+      round:1, sittingOut:sit0, picaSplit:0, swapSel:null, teamA:t.teamA, teamB:t.teamB,
       ptsA:'', ptsB:'', winner:null, history:[], showHist:false, showCantos:false });
   } else {
     S = Object.assign({}, S, { screen:'setup',
