@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+
+# logs / os
+*.log
+.DS_Store
+
+# capacitor copies the web build into the native projects on `cap sync`
+android/app/src/main/assets/public/
+ios/App/App/public/
+
+# iOS (generated on a Mac)
+ios/App/Pods/
+ios/App/output/
+ios/App/App/Assets.xcassets/Splash.imageset/*.png
+
+# build output
+android/app/release/
+www/*.map
+
+# keystore — NEVER commit signing keys
+*.keystore
+*.jks
+key.properties

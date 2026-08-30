@@ -1,0 +1,13 @@
+{
+  "appId": "com.anotadordetruco.app",
+  "appName": "Anotador de Truco",
+  "webDir": "www",
+  "backgroundColor": "#06301fff",
+  "android": {
+    "backgroundColor": "#06301fff"
+  },
+  "ios": {
+    "backgroundColor": "#06301fff",
+    "contentInset": "always"
+  }
+}
