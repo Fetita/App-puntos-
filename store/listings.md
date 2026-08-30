@@ -28,7 +28,7 @@ El Anotador de Truco es el tanteador más lindo y más fácil de usar: fósforos
 • Clásico 2 vs 2
 • 3 vs 3
 • Modos rotativos para 3, 5 y 7: las parejas cambian cada mano y uno descansa, con puntaje individual.
-• Pica pica para 6 y 7: todos contra todos, las parejas se rearman cada mano y el puntaje es individual.
+• Pica pica para 6 y 7: se juega 3 vs 3 con equipos que rotan y, cuando alguien llega a 5, se alterna con manos pica pica en las que cada uno se enfrenta al de enfrente. Puntaje individual.
 
 ★ EL TANTEADOR DE SIEMPRE
 • Fósforos de tiza dibujados como en el cuaderno.
@@ -93,7 +93,7 @@ DE 2 A 7 JUGADORES
 - Clásico 2 vs 2
 - 3 vs 3
 - Modos rotativos para 3, 5 y 7: las parejas cambian cada mano y uno descansa, con puntaje individual.
-- Pica pica para 6 y 7: todos contra todos, las parejas se rearman cada mano y el puntaje es individual.
+- Pica pica para 6 y 7: se juega 3 vs 3 con equipos que rotan y, cuando alguien llega a 5, se alterna con manos pica pica en las que cada uno se enfrenta al de enfrente. Puntaje individual.
 
 EL TANTEADOR DE SIEMPRE
 - Fósforos de tiza dibujados como en el cuaderno.
@@ -135,7 +135,7 @@ Primary: `Games → Card`  ·  Secondary: `Entertainment`
 ```
 Keep score of your truco games the way it's done at the table — chalk tallies, "malas" and "buenas", with envido and truco one tap away.
 
-- 2 to 7 players: 1v1, 2v2, 3v3, rotating modes (3/5/7) where pairs change each hand, plus "pica pica" free-for-all for 6 and 7 with individual scoring.
+- 2 to 7 players: 1v1, 2v2, 3v3, rotating modes (3/5/7) where pairs change each hand, plus "pica pica" for 6 and 7: once someone reaches 5, hands alternate between 3v3 and head-to-head duels. Individual scoring.
 - Classic chalk-tally scoreboard, malas/buenas split.
 - Quick +1/+2/+3 buttons and a full envido & truco call panel.
 - Works offline. Never loses your game. No ads. No sign-up.
