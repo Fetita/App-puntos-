@@ -27,13 +27,13 @@ El Anotador de Truco es el tanteador más lindo y más fácil de usar: fósforos
 • Mano a mano (1 vs 1)
 • Clásico 2 vs 2
 • 3 vs 3
-• Modos rotativos para 3, 5 y 7: las parejas cambian cada mano y uno descansa, con puntaje individual.
-• Pica pica para 6 y 7: se juega 3 vs 3 con equipos que rotan y, cuando alguien llega a 5, se alterna con manos pica pica en las que cada uno se enfrenta al de enfrente. Puntaje individual.
+• Modos rotativos para 3 y 5: las parejas cambian cada mano, uno descansa y el puntaje es individual.
+• Pica pica en 6 y 7: al llegar a 5 se alterna con manos pica pica, tres duelos mano a mano contra el de enfrente. De a 6 elegís si se cuenta a suma o a diferencia. Se juega a 25.
 
 ★ EL TANTEADOR DE SIEMPRE
 • Fósforos de tiza dibujados como en el cuaderno.
 • Malas y buenas separadas.
-• Se juega a 15, 30 o los puntos que quieras.
+• Se juega a 15, 30 o los puntos que quieras (6 y 7 van a 25).
 
 ★ TRUCO Y ENVIDO A UN TOQUE
 • Botones rápidos +1, +2, +3.
@@ -56,7 +56,7 @@ Descargá el Anotador de Truco y que empiece la partida. ¡Son 30, ganaron!
 
 ### Datos del listado
 - **Email de contacto:** aferrer@eagerworks.com
-- **Política de privacidad (URL):** _publicá `store/PRIVACY.md` (ver guía) y pegá la URL acá_
+- **Política de privacidad (URL):** `https://fetita.github.io/App-puntos-/privacidad.html` (ver LAUNCH_PLAN.md §5)
 
 ---
 
@@ -92,13 +92,13 @@ DE 2 A 7 JUGADORES
 - Mano a mano (1 vs 1)
 - Clásico 2 vs 2
 - 3 vs 3
-- Modos rotativos para 3, 5 y 7: las parejas cambian cada mano y uno descansa, con puntaje individual.
-- Pica pica para 6 y 7: se juega 3 vs 3 con equipos que rotan y, cuando alguien llega a 5, se alterna con manos pica pica en las que cada uno se enfrenta al de enfrente. Puntaje individual.
+- Modos rotativos para 3 y 5: las parejas cambian cada mano, uno descansa y el puntaje es individual.
+- Pica pica en 6 y 7: al llegar a 5 se alterna con manos pica pica, tres duelos mano a mano contra el de enfrente. De a 6 elegís si se cuenta a suma o a diferencia. Se juega a 25.
 
 EL TANTEADOR DE SIEMPRE
 - Fósforos de tiza dibujados como en el cuaderno.
 - Malas y buenas separadas.
-- Se juega a 15, 30 o los puntos que quieras.
+- Se juega a 15, 30 o los puntos que quieras (6 y 7 van a 25).
 
 TRUCO Y ENVIDO A UN TOQUE
 - Botones rápidos +1, +2, +3.
@@ -135,7 +135,7 @@ Primary: `Games → Card`  ·  Secondary: `Entertainment`
 ```
 Keep score of your truco games the way it's done at the table — chalk tallies, "malas" and "buenas", with envido and truco one tap away.
 
-- 2 to 7 players: 1v1, 2v2, 3v3, rotating modes (3/5/7) where pairs change each hand, plus "pica pica" for 6 and 7: once someone reaches 5, hands alternate between 3v3 and head-to-head duels. Individual scoring.
+- 2 to 7 players: 1v1, 2v2, 3v3 and rotating modes (3/5/7), plus "pica pica" for 6 and 7: once 5 is reached, hands alternate with three head-to-head duels. Games go to 25.
 - Classic chalk-tally scoreboard, malas/buenas split.
 - Quick +1/+2/+3 buttons and a full envido & truco call panel.
 - Works offline. Never loses your game. No ads. No sign-up.
