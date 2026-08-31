@@ -28,12 +28,12 @@ El Anotador de Truco es el tanteador más lindo y más fácil de usar: fósforos
 • Clásico 2 vs 2
 • 3 vs 3
 • Modos rotativos para 3 y 5: las parejas cambian cada mano, uno descansa y el puntaje es individual.
-• Pica pica en 6 y 7: al llegar a 5 se alterna con manos pica pica, tres duelos mano a mano contra el de enfrente. De a 6 elegís si se cuenta a suma o a diferencia. Se juega a 25.
+• Pica pica en 6 y 7: entre los 5 y los 25 puntos las manos alternan con pica pica, tres duelos mano a mano contra el de enfrente. Después se sigue normal hasta los 30. De a 6 elegís si se cuenta a suma o a diferencia.
 
 ★ EL TANTEADOR DE SIEMPRE
 • Fósforos de tiza dibujados como en el cuaderno.
 • Malas y buenas separadas.
-• Se juega a 15, 30 o los puntos que quieras (6 y 7 van a 25).
+• Se juega a 15, 30 o los puntos que quieras.
 
 ★ TRUCO Y ENVIDO A UN TOQUE
 • Botones rápidos +1, +2, +3.
@@ -93,12 +93,12 @@ DE 2 A 7 JUGADORES
 - Clásico 2 vs 2
 - 3 vs 3
 - Modos rotativos para 3 y 5: las parejas cambian cada mano, uno descansa y el puntaje es individual.
-- Pica pica en 6 y 7: al llegar a 5 se alterna con manos pica pica, tres duelos mano a mano contra el de enfrente. De a 6 elegís si se cuenta a suma o a diferencia. Se juega a 25.
+- Pica pica en 6 y 7: entre los 5 y los 25 puntos las manos alternan con pica pica, tres duelos mano a mano contra el de enfrente. Después se sigue normal hasta los 30. De a 6 elegís si se cuenta a suma o a diferencia.
 
 EL TANTEADOR DE SIEMPRE
 - Fósforos de tiza dibujados como en el cuaderno.
 - Malas y buenas separadas.
-- Se juega a 15, 30 o los puntos que quieras (6 y 7 van a 25).
+- Se juega a 15, 30 o los puntos que quieras.
 
 TRUCO Y ENVIDO A UN TOQUE
 - Botones rápidos +1, +2, +3.
@@ -135,7 +135,7 @@ Primary: `Games → Card`  ·  Secondary: `Entertainment`
 ```
 Keep score of your truco games the way it's done at the table — chalk tallies, "malas" and "buenas", with envido and truco one tap away.
 
-- 2 to 7 players: 1v1, 2v2, 3v3 and rotating modes (3/5/7), plus "pica pica" for 6 and 7: once 5 is reached, hands alternate with three head-to-head duels. Games go to 25.
+- 2 to 7 players: 1v1, 2v2, 3v3 and rotating modes (3/5/7), plus "pica pica" for 6 and 7: between 5 and 25 points hands alternate with three head-to-head duels, then play returns to normal up to 30.
 - Classic chalk-tally scoreboard, malas/buenas split.
 - Quick +1/+2/+3 buttons and a full envido & truco call panel.
 - Works offline. Never loses your game. No ads. No sign-up.

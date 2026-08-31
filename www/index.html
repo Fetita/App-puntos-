@@ -459,9 +459,10 @@ var DEFAULT_STATE = {
 
 /* El pica pica no arranca de entrada: se activa cuando un jugador (de a 7) o un
    equipo (de a 6) llega a PICA_FROM, y de ahí en más las manos alternan común /
-   pica pica. Se juega hasta PICA_TARGET. */
+   pica pica. Al llegar a PICA_UNTIL el pica pica se termina y se sigue jugando
+   normal hasta los puntos de la partida (30). */
 var PICA_FROM = 5;
-var PICA_TARGET = 25;
+var PICA_UNTIL = 25;
 
 /* ── PERSISTENCE ──
    Keeps the current game (or setup) alive across refreshes, app closes and
@@ -521,10 +522,10 @@ function scoresForTarget() {
   return isIndividual() ? S.players.map(function(p){ return p.score; }) : S.teamScores.slice();
 }
 function modeHint(n) {
-  if (n===6) return '3 contra 3 · puntaje por equipo · desde que un equipo llega a '+PICA_FROM
-    + ' se alterna con manos pica pica · se juega a '+PICA_TARGET;
-  if (n===7) return 'Rotativo 3 vs 3 · uno descansa · puntaje individual · desde que alguien llega a '
-    + PICA_FROM + ' se alterna con manos pica pica · se juega a '+PICA_TARGET;
+  if (n===6) return '3 contra 3 · puntaje por equipo · entre los '+PICA_FROM+' y los '+PICA_UNTIL
+    + ' puntos se alterna con manos pica pica, después se sigue normal';
+  if (n===7) return 'Rotativo 3 vs 3 · uno descansa · puntaje individual · entre los '+PICA_FROM
+    + ' y los '+PICA_UNTIL+' puntos se alterna con manos pica pica, después se sigue normal';
   if (n===2) return 'Mano a mano · 1 contra 1 · puntaje por equipo';
   if (n===3) return 'Rotativo 1 vs 1 · uno descansa · puntaje individual';
   if (n===4) return 'Clásico · 2 contra 2 · puntaje por equipo';
@@ -533,15 +534,31 @@ function modeHint(n) {
 }
 
 /* ¿Ya se llegó al umbral? A partir de ahí empiezan a alternar las manos. */
-function picaStarted() {
-  return picaApplies() && scoresForTarget().some(function(s){ return s >= PICA_FROM; });
+/* El pica pica vive en una ventana: arranca a los PICA_FROM y se corta a los
+   PICA_UNTIL. Antes y después se juega normal. */
+function picaPhase() {
+  if (!picaApplies()) return false;
+  var mx = Math.max.apply(null, scoresForTarget());
+  return mx >= PICA_FROM && mx < PICA_UNTIL;
+}
+function picaOver() {
+  return picaApplies() && Math.max.apply(null, scoresForTarget()) >= PICA_UNTIL;
+}
+/* En qué tramo de la partida estamos, para mostrarlo en la mano común. */
+function phaseText() {
+  if (picaOver()) return 'Se terminó el pica pica. Se sigue normal hasta '+S.target+'.';
+  if (picaPhase()) return 'Mano común. La que viene es pica pica.';
+  return 'Manos comunes hasta que '+(isIndividual()?'alguien llegue':'un equipo llegue')
+    + ' a '+PICA_FROM+'.';
 }
 function isPicaHand() { return picaApplies() && S.handKind==='pica'; }
 /* Apenas se llega a PICA_FROM, la mano siguiente ya es pica pica. Después van
    alternando, salvo que el pica pica quede empatado: ahí se repite. */
 function nextHandKind(scoresAfter, empatada) {
   if (!picaApplies()) return 'comun';
-  if (!scoresAfter.some(function(s){ return s >= PICA_FROM; })) return 'comun';
+  var mx = Math.max.apply(null, scoresAfter);
+  /* fuera de la ventana [PICA_FROM, PICA_UNTIL) se juega normal */
+  if (mx < PICA_FROM || mx >= PICA_UNTIL) return 'comun';
   if (S.handKind === 'pica') return empatada ? 'pica' : 'comun';
   return 'pica';
 }
@@ -741,8 +758,7 @@ function tplGame() {
      va acá para que igual se vea cuándo arranca el pica pica */
   var phaseNote = (picaApplies() && !isIndividual())
     ? '<div class="phase-note" style="margin:-4px 0 12px">'
-      + (picaStarted() ? 'Mano común. La que viene es pica pica.'
-                       : 'Manos comunes hasta que un equipo llegue a '+PICA_FROM+'.')
+      + phaseText()
       + '</div>'
     : '';
 
@@ -907,10 +923,7 @@ function tplTeamsRotating() {
      todavía no arrancó, o si la próxima mano ya es de duelos */
   var phase = '';
   if (pica) {
-    phase = picaStarted()
-      ? '<div class="phase-note">Mano común. La que viene es pica pica.</div>'
-      : '<div class="phase-note">Manos comunes hasta que '
-        + (isIndividual()?'alguien llegue':'un equipo llegue')+' a '+PICA_FROM+'.</div>';
+    phase = '<div class="phase-note">'+phaseText()+'</div>';
   }
 
   return restCard
@@ -1112,9 +1125,7 @@ function addPts(key, v) {
 function setNumPlayers(n) {
   var cur=[];
   for (var i=0;i<S.numPlayers;i++) { var el=q('pn'+i); cur[i]=el?el.value:(S.playerNames[i]||''); }
-  /* 6 y 7 se juegan a PICA_TARGET; el resto, a 30 */
-  S = Object.assign({}, S, { numPlayers:n, playerNames:cur,
-    target: picaApplies(n) ? PICA_TARGET : 30 });
+  S = Object.assign({}, S, { numPlayers:n, playerNames:cur });
   render();
 }
 function setPicaScoring(v) {

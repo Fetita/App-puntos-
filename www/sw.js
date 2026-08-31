@@ -1,7 +1,7 @@
 /* Anotador de Truco — service worker
    Cache-first for the app shell so it works fully offline. Bump CACHE on every
    release so clients pick up the new files. */
-var CACHE = 'truco-v7';
+var CACHE = 'truco-v8';
 var ASSETS = [
   '.',
   'index.html',
