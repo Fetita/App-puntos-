@@ -34,6 +34,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # el default incluye 'tools', que ya no existe en las cmdline-tools
+          # actuales y hace fallar al sdkmanager; Gradle baja el resto solo
+          packages: 'platform-tools'
 
       - name: Install dependencies
         run: npm install
