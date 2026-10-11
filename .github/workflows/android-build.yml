@@ -14,6 +14,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # para publicar el APK como release
     env:
       # 'true' only when the keystore secret is present — gates the release steps.
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
@@ -34,6 +36,10 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # el default incluye 'tools', que ya no existe en las cmdline-tools
+          # actuales y hace fallar al sdkmanager; Gradle baja el resto solo
+          packages: 'platform-tools'
 
       - name: Install dependencies
         run: npm install
@@ -51,6 +57,24 @@ jobs:
           name: app-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      # Publica el APK como release del repo, así se baja directo desde el
+      # celular (sin iniciar sesión ni descomprimir) en un link que no cambia:
+      # https://github.com/Fetita/App-puntos-/releases/latest/download/anotador-truco.apk
+      - name: Rename APK for download
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk anotador-truco.apk
+
+      - name: Publish APK as release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          name: Anotador de Truco (prueba ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          body: |
+            APK de prueba compilado desde `${{ github.ref_name }}` (${{ github.sha }}).
+            Para instalarlo en Android, bajá `anotador-truco.apk` desde el celular y abrilo.
+          files: anotador-truco.apk
+          make_latest: true
 
       # ── Signed release bundle (.aab) for the Play Store ──
       # Only runs when you've added the four repo secrets (see CI_RELEASE.md).

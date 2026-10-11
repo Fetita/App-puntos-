@@ -170,16 +170,22 @@ tienda (no solo una web):
 
 ## 5. Publicar la política de privacidad (ambas tiendas la exigen)
 
-Necesitás una **URL pública**. La más rápida y gratis:
+Necesitás una **URL pública**. Ya está resuelto: el workflow
+`.github/workflows/pages.yml` publica la app y la política de privacidad en
+GitHub Pages en cada push.
 
-**Opción A — GitHub Pages:**
-1. Subí `store/PRIVACY.md` al repo (ya está).
-2. En GitHub: **Settings → Pages → Deploy from branch** → carpeta `/`.
-3. La URL queda tipo `https://fetita.github.io/app-puntos-/store/PRIVACY`.
+**Activación (una sola vez):** GitHub → **Settings → Pages → Source: "GitHub
+Actions"**. El workflow intenta activarlo solo; si no pudo, es ese único clic.
 
-**Opción B — Gist público** o cualquier hosting estático (Netlify, Vercel).
+Te quedan dos URLs:
 
-Pegá esa URL en los campos *Privacy Policy* de Play Console y App Store Connect.
+| URL | Para qué |
+|---|---|
+| `https://fetita.github.io/App-puntos-/` | La app, para probarla desde el celular (se puede "Agregar a pantalla de inicio" y anda offline) |
+| `https://fetita.github.io/App-puntos-/privacidad.html` | **La política de privacidad** — pegá esta en los campos *Privacy Policy* de Play Console y App Store Connect |
+
+> El texto fuente está en `store/PRIVACY.md` (markdown) y `store/privacidad.html`
+> (la página publicada). Si cambiás uno, actualizá el otro.
 
 ---
 
