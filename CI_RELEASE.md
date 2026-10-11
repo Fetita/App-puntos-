@@ -13,6 +13,11 @@ the **Actions** tab → *Build Android* → **Run workflow**.
 
 Download artifacts from the bottom of each completed workflow run.
 
+Each run also publishes the debug APK as a GitHub release, so it can be
+downloaded straight from a phone (no login, no zip) at a link that never
+changes:
+https://github.com/Fetita/App-puntos-/releases/latest/download/anotador-truco.apk
+
 > The debug APK is for testing only — Google Play requires the signed `.aab`.
 
 ## Enable the signed release build (one-time setup)
