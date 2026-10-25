@@ -193,6 +193,33 @@
 
     .player-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
     .player-row .avatar { width:42px; height:42px; font-size:17px; }
+
+    /* la mesa del setup: cada uno en su silla, como están sentados */
+    .mesa { position:relative; height:250px; margin:2px 0 18px; }
+    .mesa-felt {
+      position:absolute; left:23%; right:23%; top:25%; bottom:25%; border-radius:50%;
+      background:radial-gradient(circle at 50% 40%, var(--felt-l), var(--felt-d));
+      border:5px solid var(--wood);
+      box-shadow:inset 0 0 18px rgba(0,0,0,.55), 0 0 0 1px var(--gold-d), 0 6px 14px rgba(0,0,0,.4);
+      display:flex; align-items:center; justify-content:center; opacity:.95;
+    }
+    .mesa-felt svg { opacity:.35; }
+    .seat {
+      position:absolute; transform:translate(-50%,-50%); width:78px;
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+      background:none; border:none; padding:2px; cursor:pointer; -webkit-appearance:none;
+      color:var(--cream); font-family:Georgia,serif;
+    }
+    .seat:active { transform:translate(-50%,-50%) scale(.92); }
+    .seat .avatar { width:34px; height:34px; font-size:14px; }
+    .seat-a .avatar { outline:2px solid var(--gold); outline-offset:2px; }
+    .seat-b .avatar { outline:2px solid var(--red-l); outline-offset:2px; }
+    .seat-name { font-size:12px; font-weight:700; max-width:78px; line-height:1.2;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .seat-name.seat-empty { opacity:.55; font-style:italic; font-weight:400; }
+    .seat-tag { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--cream-d); }
+    .seat-a .seat-tag { color:var(--gold); }
+    .seat-b .seat-tag { color:var(--red-l); }
     .team-divider {
       font-family:Georgia,serif; font-size:13px; font-weight:700; text-transform:uppercase;
       letter-spacing:1.5px; margin-bottom:12px; padding-top:2px;
@@ -725,6 +752,51 @@ function picaScoringSelector(n) {
     + opt('diferencia','A diferencia','sólo la ventaja de un bando')
     + '</div>';
 }
+/* En qué orden se sientan alrededor de la mesa. En los modos por equipo los
+   compañeros van alternados: Oro 1, Copa 1, Oro 2, Copa 2... En los rotativos,
+   el orden de la lista es el de la mesa. */
+function seatOrder(n) {
+  if (n % 2 === 1) { var o = []; for (var i=0;i<n;i++) o.push(i); return o; }
+  var half = n/2, t = [];
+  for (var k=0;k<half;k++) t.push(k, half+k);
+  return t;
+}
+function seatTag(i, n) {
+  if (n % 2 === 1) return 'Lugar '+(i+1);
+  var half = n/2;
+  return i < half ? 'Oro '+(i+1) : 'Copa '+(i-half+1);
+}
+function seatName(i) {
+  var t = (S.playerNames[i]||'').trim();
+  return t ? firstName(t) : 'Jugador '+(i+1);
+}
+/* La mesa vista desde arriba, con cada uno en su silla. Se actualiza mientras
+   se escriben los nombres y tocar una silla lleva a su nombre. */
+function tplMesa(n) {
+  var order = seatOrder(n), half = n/2;
+  var seats = order.map(function(i, k){
+    var ang = (-90 + 360*k/n) * Math.PI/180;
+    var x = 50 + 41*Math.cos(ang), y = 50 + 40*Math.sin(ang);
+    var side = n % 2 === 1 ? '' : (i < half ? ' seat-a' : ' seat-b');
+    var empty = !(S.playerNames[i]||'').trim();
+    return '<button class="seat'+side+'" id="seat-'+i+'" style="left:'+x.toFixed(1)+'%;top:'+y.toFixed(1)+'%">'
+      + '<em class="avatar c'+i+'" id="sa'+i+'">'+esc(initial(S.playerNames[i], i+1))+'</em>'
+      + '<span class="seat-name'+(empty?' seat-empty':'')+'" id="sn'+i+'">'+esc(seatName(i))+'</span>'
+      + '<span class="seat-tag">'+seatTag(i, n)+'</span>'
+      + '</button>';
+  }).join('');
+  return '<div class="mesa">'
+    + '<div class="mesa-felt">'+suit('espada',40,'#f4ead2')+'</div>'
+    + seats
+    + '</div>';
+}
+function mesaHint(n) {
+  if (n===6) return 'Cargalos como están sentados, siguiendo la mesa: el Copa 1 va entre el Oro 1 y el Oro 2. De ahí sale quién juega contra quién en el pica pica.';
+  if (n===7) return 'Cargalos en el orden en que están sentados, siguiendo la mesa: de ahí salen los equipos y quién juega contra quién.';
+  if (n===3 || n===5) return 'Cargalos en el orden en que están sentados, siguiendo la mesa: de ahí salen las parejas de cada mano.';
+  if (n===4) return 'Los compañeros se sientan enfrentados, como en la mesa. Tocá una silla para escribir su nombre.';
+  return 'Tocá una silla para escribir su nombre.';
+}
 function tplSetup() {
   var n = S.numPlayers;
   var countBtns = [2,3,4,5,6,7].map(function(c){
@@ -734,7 +806,7 @@ function tplSetup() {
   var rows = '';
   function row(i){
     return '<div class="player-row">'
-      + '<em class="avatar c'+i+'">'+esc(initial(S.playerNames[i], i+1))+'</em>'
+      + '<em class="avatar c'+i+'" id="pa'+i+'">'+esc(initial(S.playerNames[i], i+1))+'</em>'
       + '<input class="field" id="pn'+i+'" type="text" maxlength="18"'
       + ' placeholder="Jugador '+(i+1)+'" value="'+esc(S.playerNames[i]||'')+'">'
       + '</div>';
@@ -764,11 +836,8 @@ function tplSetup() {
     + '</div>'
     + '<div class="card">'
     + '<div class="card-label">Jugadores</div>'
-    + (n===7
-        ? '<div class="swap-hint">Cargalos en el orden en que están sentados en la mesa: de ahí salen los equipos y quién juega contra quién.</div>'
-        : n===6
-        ? '<div class="swap-hint">Cargalos en el orden en que están sentados: el Copa 1 va entre el Oro 1 y el Oro 2, y así alrededor de la mesa. De ahí sale quién juega contra quién en el pica pica.</div>'
-        : '')
+    + tplMesa(n)
+    + '<div class="swap-hint">'+mesaHint(n)+'</div>'
     + rows
     + '</div>'
     + '<div class="card">'
@@ -1223,6 +1292,26 @@ function bind() {
   on('btn-menu',  goToMenu);
   on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
   [2,3,4,5,6,7].forEach(function(c){ on('cnt-'+c, function(){ setNumPlayers(c); }); });
+  if (S.screen==='setup') {
+    for (var pi=0; pi<S.numPlayers; pi++) {
+      (function(idx){
+        var el = q('pn'+idx);
+        if (!el) return;
+        /* el nombre se guarda mientras se escribe: así no se pierde si se toca
+           otra opción del setup, y la mesa lo muestra al instante */
+        el.addEventListener('input', function(){
+          S.playerNames = (S.playerNames||[]).slice();
+          S.playerNames[idx] = el.value;
+          var ini = initial(el.value, idx+1);
+          ['pa','sa'].forEach(function(pre){ var a = q(pre+idx); if (a) a.textContent = ini; });
+          var sn = q('sn'+idx);
+          if (sn) { sn.textContent = seatName(idx); sn.classList.toggle('seat-empty', !el.value.trim()); }
+          saveState();
+        });
+        on('seat-'+idx, function(){ el.focus(); el.select(); });
+      })(pi);
+    }
+  }
   ['suma','diferencia'].forEach(function(v){ on('pscore-'+v, function(){ setPicaScoring(v); }); });
   if (isIndividual() && restCount()>0) {
     for (var i=0;i<S.numPlayers;i++) {
@@ -1297,7 +1386,9 @@ function editStep(inputId, key, idx, v) {
 
 /* ── ACTIONS ── */
 function setNumPlayers(n) {
-  var cur=[];
+  /* se parte de todos los nombres guardados, así si bajás de 6 a 4 y volvés
+     a 6 no se pierden los dos últimos */
+  var cur = (S.playerNames||[]).slice();
   for (var i=0;i<S.numPlayers;i++) { var el=q('pn'+i); cur[i]=el?el.value:(S.playerNames[i]||''); }
   S = Object.assign({}, S, { numPlayers:n, playerNames:cur });
   render();
