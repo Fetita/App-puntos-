@@ -622,13 +622,14 @@ function teamWinner(nts) {
 }
 /* Duelos de la mano pica pica, siempre uno de cada equipo.
    De a 7 sale de la mesa: cada uno contra el que tiene a media vuelta (el que
-   descansa queda afuera del círculo). De a 6 los equipos son fijos, así que se
-   enfrentan de a pares — y como sólo cuentan los totales por equipo, el orden
-   dentro del trío no cambia el resultado. */
+   descansa queda afuera del círculo). De a 6 los equipos son fijos y se
+   sientan alternados (Oro 1, Copa 1, Oro 2, Copa 2, Oro 3, Copa 3 alrededor de
+   la mesa), así que el de enfrente del Oro i es el Copa i+1: enfrentar al Oro i
+   con el Copa i sería ponerlo contra el de al lado. */
 function computeDuels(sittingOut) {
   if (!isIndividual()) {
     var a = S.teamAMembers, b = S.teamBMembers, d2 = [];
-    for (var i=0;i<a.length;i++) d2.push([a[i], b[i]]);
+    for (var i=0;i<a.length;i++) d2.push([a[i], b[(i+1)%b.length]]);
     return d2;
   }
   var pool = [];
@@ -765,6 +766,8 @@ function tplSetup() {
     + '<div class="card-label">Jugadores</div>'
     + (n===7
         ? '<div class="swap-hint">Cargalos en el orden en que están sentados en la mesa: de ahí salen los equipos y quién juega contra quién.</div>'
+        : n===6
+        ? '<div class="swap-hint">Cargalos en el orden en que están sentados: el Copa 1 va entre el Oro 1 y el Oro 2, y así alrededor de la mesa. De ahí sale quién juega contra quién en el pica pica.</div>'
         : '')
     + rows
     + '</div>'
@@ -907,8 +910,8 @@ function tplDuels() {
   var como = isIndividual()
     ? 'Cada uno juega contra el que tiene enfrente y suma lo suyo.'
     : (S.picaScoring==='diferencia'
-        ? 'Tres duelos, uno de cada equipo. Se anota sólo la diferencia entre los dos bandos.'
-        : 'Tres duelos, uno de cada equipo. Cada equipo suma todo lo de sus duelos.');
+        ? 'Cada uno juega contra el que tiene enfrente. Se anota sólo la diferencia entre los dos bandos.'
+        : 'Cada uno juega contra el que tiene enfrente. Cada equipo suma todo lo de sus duelos.');
   var repe = (S.history.length && S.history[S.history.length-1].kind==='pica'
               && S.history[S.history.length-1].empatada)
     ? '<div class="phase-note" style="color:#f6d97f">La anterior quedó empatada, así que se repite.</div>'
