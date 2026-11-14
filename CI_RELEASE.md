@@ -1,7 +1,7 @@
 # Build Android in the cloud (no Android Studio needed)
 
 The workflow `.github/workflows/android-build.yml` builds the app on GitHub's
-servers. It runs on every push to this branch and can be triggered manually from
+servers. It runs on every push that touches the app and can be triggered manually from
 the **Actions** tab → *Build Android* → **Run workflow**.
 
 ## What you get
@@ -56,3 +56,49 @@ versionName "1.1"      // the human-facing version
 
 And bump the service-worker cache (`CACHE` in `www/sw.js`) so offline users get
 the update.
+
+---
+
+# Build iOS in the cloud (no Mac needed)
+
+The workflow `.github/workflows/ios-build.yml` builds the iOS app on a GitHub
+macOS runner. It runs on every push that touches the app, and manually from
+**Actions → Build iOS → Run workflow**.
+
+> macOS runners count 10× against the free Actions minutes of private repos.
+
+## What you get
+
+| Artifact | When | Use |
+|---|---|---|
+| `ios-unsigned-ipa` | always | Unsigned `.ipa`. Install it on an iPhone with **Sideloadly** or **AltStore**, which sign it with your own Apple ID (free accounts: the app expires after 7 days). |
+| `ios-simulator-app` | always | `App.app` for the Xcode Simulator (on a Mac: drag it onto the simulator). |
+| TestFlight build | manual run with **testflight** ticked + secrets set | Signed build uploaded straight to App Store Connect / TestFlight. |
+
+## Enable TestFlight / App Store uploads (one-time setup)
+
+Needs the **Apple Developer Program** (USD 99/year).
+
+1. In https://appstoreconnect.apple.com → **Apps → +**, create the app with
+   bundle id `com.anotadordetruco.app` (register it first in
+   developer.apple.com → Identifiers if it doesn't show up).
+2. **Users and Access → Integrations → App Store Connect API → Team Keys → +**.
+   Give it the **Admin** role (Xcode needs it to create the signing
+   certificate and profile automatically). Download the `.p8` (only once!) and
+   note the **Key ID** and the **Issuer ID**.
+3. Find your **Team ID** at developer.apple.com → Account → Membership.
+4. Add these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret name | Value |
+|---|---|
+| `APPSTORE_API_KEY_P8` | full text of the `.p8` file (including the BEGIN/END lines) |
+| `APPSTORE_API_KEY_ID` | Key ID |
+| `APPSTORE_API_ISSUER_ID` | Issuer ID |
+| `APPLE_TEAM_ID` | Team ID |
+
+5. **Actions → Build iOS → Run workflow**, tick **testflight**, run. The build
+   number is the workflow run number, so it always goes up. A few minutes after
+   it finishes the build shows up in App Store Connect → TestFlight.
+
+To change the human-facing version, edit `MARKETING_VERSION` in
+`ios/App/App.xcodeproj/project.pbxproj` (or in Xcode → target → General).

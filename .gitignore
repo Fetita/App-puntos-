@@ -12,7 +12,6 @@ ios/App/App/public/
 # iOS (generated on a Mac)
 ios/App/Pods/
 ios/App/output/
-ios/App/App/Assets.xcassets/Splash.imageset/*.png
 
 # build output
 android/app/release/
