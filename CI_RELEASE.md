@@ -1,7 +1,7 @@
 # Build Android in the cloud (no Android Studio needed)
 
 The workflow `.github/workflows/android-build.yml` builds the app on GitHub's
-servers. It runs on every push that touches the app and can be triggered manually from
+servers. It runs on every push to this branch and can be triggered manually from
 the **Actions** tab → *Build Android* → **Run workflow**.
 
 ## What you get
@@ -12,6 +12,11 @@ the **Actions** tab → *Build Android* → **Run workflow**.
 | `app-release-aab` | only if signing secrets are set | The **signed bundle to upload to Google Play**. |
 
 Download artifacts from the bottom of each completed workflow run.
+
+Each run also publishes the debug APK as a GitHub release, so it can be
+downloaded straight from a phone (no login, no zip) at a link that never
+changes:
+https://github.com/Fetita/App-puntos-/releases/latest/download/anotador-truco.apk
 
 > The debug APK is for testing only — Google Play requires the signed `.aab`.
 
@@ -71,7 +76,7 @@ macOS runner. It runs on every push that touches the app, and manually from
 
 | Artifact | When | Use |
 |---|---|---|
-| `ios-unsigned-ipa` | always | Unsigned `.ipa`. Install it on an iPhone with **Sideloadly** or **AltStore**, which sign it with your own Apple ID (free accounts: the app expires after 7 days). |
+| `ios-unsigned-ipa` (also published as release `ipa-<n>`) | always | Unsigned `.ipa`. Install it on an iPhone with **Sideloadly** or **AltStore**, which sign it with your own Apple ID (free accounts: the app expires after 7 days). |
 | `ios-simulator-app` | always | `App.app` for the Xcode Simulator (on a Mac: drag it onto the simulator). |
 | TestFlight build | manual run with **testflight** ticked + secrets set | Signed build uploaded straight to App Store Connect / TestFlight. |
 

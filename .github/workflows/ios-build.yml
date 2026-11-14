@@ -27,6 +27,8 @@ on:
 jobs:
   build:
     runs-on: macos-15
+    permissions:
+      contents: write   # para publicar la IPA como release
     env:
       HAS_ASC_KEY: ${{ secrets.APPSTORE_API_KEY_P8 != '' && secrets.APPLE_TEAM_ID != '' }}
     steps:
@@ -79,6 +81,21 @@ jobs:
           name: ios-unsigned-ipa
           path: ${{ runner.temp }}/AnotadorDeTruco-unsigned.ipa
           if-no-files-found: error
+
+      # Igual que el APK: lo publica como release para bajarlo sin iniciar
+      # sesión. No se marca como "latest" para no pisar el link fijo del APK.
+      - name: Publish unsigned IPA as release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ipa-${{ github.run_number }}
+          name: Anotador de Truco iOS (prueba ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          body: |
+            IPA sin firmar compilada desde `${{ github.ref_name }}` (${{ github.sha }}).
+            Para instalarla en un iPhone, abrila con Sideloadly o AltStore desde la
+            compu, que la firman con tu Apple ID.
+          files: ${{ runner.temp }}/AnotadorDeTruco-unsigned.ipa
+          make_latest: false
 
       # ── Build firmado + subida a TestFlight ──
       # Usa firma automática de Xcode con una API key de App Store Connect
