@@ -311,6 +311,25 @@
       padding:2px 7px; border-radius:20px;
     }
 
+    /* quién reparte y quién corta */
+    .deal-row { display:flex; gap:10px; }
+    .deal-item {
+      flex:1; display:flex; align-items:center; gap:9px; min-width:0;
+      background:rgba(0,0,0,.25); border:1.5px solid var(--line); border-radius:14px; padding:9px 10px;
+    }
+    .deal-item.deal-main { border-color:var(--gold); background:linear-gradient(160deg,rgba(227,179,65,.2),rgba(227,179,65,.08)); }
+    .deal-item .avatar { width:32px; height:32px; font-size:14px; flex:none; }
+    .deal-txt { min-width:0; }
+    .deal-lbl { font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--cream-d); }
+    .deal-main .deal-lbl { color:var(--gold); }
+    .deal-name { font-family:Georgia,serif; font-size:15px; font-weight:700; color:var(--cream);
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .deal-change { display:block; margin:10px auto 0; background:none; border:none; color:var(--gold-l);
+      font-family:Georgia,serif; font-size:13px; text-decoration:underline; cursor:pointer; -webkit-appearance:none; }
+    .deal-pick { margin-top:12px; }
+    .seat-deal { font-size:8px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+      color:var(--ink); background:var(--gold); border-radius:6px; padding:1px 5px; margin-top:1px; }
+
     /* sitting-out selector */
     .sitting-chips { display:flex; flex-wrap:wrap; gap:8px; }
     .player-chip {
@@ -494,6 +513,10 @@ var DEFAULT_STATE = {
   /* editIdx: qué mano del historial se está corrigiendo (null = ninguna).
      editDraft: los valores que se van tipeando antes de guardar. */
   editIdx:null, editDraft:null,
+  /* dealerStart: en qué silla (de seatOrder) reparte la primera mano jugando
+     de a pares. De ahí gira hacia la derecha una silla por mano.
+     showDealerPick: si está abierto el selector para cambiar quién reparte. */
+  dealerStart:0, showDealerPick:false,
 };
 
 /* El pica pica no arranca de entrada: se activa cuando un jugador (de a 7) o un
@@ -766,6 +789,62 @@ function seatTag(i, n) {
   var half = n/2;
   return i < half ? 'Oro '+(i+1) : 'Copa '+(i-half+1);
 }
+/* Quién reparte y quién corta en la mano `round`.
+   - De a pares se elige al empezar quién reparte (dealerStart) y después pasa
+     al de la derecha en cada mano.
+   - De a impares reparte el de la izquierda del que descansa, así que gira
+     solo junto con el descanso.
+   En los dos casos corta el de la izquierda del que reparte. Cada silla de
+   seatOrder está a la derecha de la anterior, así que la izquierda es la silla
+   anterior. */
+function dealerFor(n, round, sittingOut) {
+  var order = seatOrder(n), k;
+  if (n % 2 === 1) k = order.indexOf(sittingOut) - 1;
+  else k = (S.dealerStart||0) + round - 1;
+  k = ((k % n) + n) % n;
+  return { dealer:order[k], cutter:order[(k-1+n)%n] };
+}
+/* En los pares, cambiar quién reparte ahora corre el arranque, así las manos
+   que siguen giran desde el nuevo. */
+function setDealer(i) {
+  var n = S.numPlayers, k = seatOrder(n).indexOf(i);
+  var round = S.screen === 'game' ? S.round : 1;
+  var start = (((k - (round-1)) % n) + n) % n;
+  S = Object.assign({}, S, { dealerStart:start, showDealerPick:false });
+  render();
+}
+function dealerChips(selected, prefix) {
+  return '<div class="sitting-chips">' + seatOrder(S.numPlayers).map(function(i){
+    var name = S.screen === 'game' ? S.players[i].name : seatName(i);
+    return '<button class="player-chip'+(i===selected?' chip-active':'')+'" id="'+prefix+i+'">'
+      + '<em class="avatar c'+i+'">'+esc(initial(name,i+1))+'</em>'+esc(firstName(name))
+      + '</button>';
+  }).join('') + '</div>';
+}
+/* Tarjeta de la partida con quién reparte y quién corta esta mano. */
+function tplDealer() {
+  var n = S.numPlayers;
+  var d = dealerFor(n, S.round, S.sittingOut);
+  function item(i, label, main) {
+    var p = S.players[i];
+    return '<div class="deal-item'+(main?' deal-main':'')+'">'
+      + '<em class="avatar c'+i+'">'+esc(initial(p.name,i+1))+'</em>'
+      + '<div class="deal-txt"><div class="deal-lbl">'+label+'</div>'
+      + '<div class="deal-name">'+esc(firstName(p.name))+'</div></div>'
+      + '</div>';
+  }
+  var even = n % 2 === 0;
+  return '<div class="card animate">'
+    + '<div class="card-label">Las cartas</div>'
+    + '<div class="deal-row">'+item(d.dealer,'Reparte',true)+item(d.cutter,'Corta',false)+'</div>'
+    + (even
+      ? (S.showDealerPick
+          ? '<div class="deal-pick"><div class="swap-hint" style="margin:0 0 10px">¿Quién reparte esta mano? Las que siguen giran hacia la derecha.</div>'
+            + dealerChips(d.dealer, 'dl-') + '</div>'
+          : '<button class="deal-change" id="btn-deal-change">Cambiar quién reparte</button>')
+      : '')
+    + '</div>';
+}
 function seatName(i) {
   var t = (S.playerNames[i]||'').trim();
   return t ? firstName(t) : 'Jugador '+(i+1);
@@ -774,13 +853,14 @@ function seatName(i) {
    se escriben los nombres y tocar una silla lleva a su nombre. */
 function tplMesa(n) {
   var order = seatOrder(n), half = n/2;
-  /* Con cantidad impar se numera hacia la derecha de cada uno: el 1 arriba y
-     el 2 a su derecha. Mirando la mesa desde arriba, con el 1 sentado arriba
-     mirando al centro, su derecha queda a la izquierda de la pantalla, así que
-     las sillas avanzan en sentido antihorario. */
-  var dir = n % 2 === 1 ? -1 : 1;
+  /* Cada silla queda a la derecha de la anterior: el 1 arriba y el 2 a su
+     derecha (en los pares, el Copa 1 a la derecha del Oro 1). Mirando la mesa
+     desde arriba, con el 1 sentado arriba mirando al centro, su derecha queda
+     a la izquierda de la pantalla, así que las sillas avanzan en sentido
+     antihorario. Para ese mismo lado gira el que reparte. */
+  var dealer = n % 2 === 0 ? dealerFor(n, 1).dealer : -1;
   var seats = order.map(function(i, k){
-    var ang = (-90 + dir*360*k/n) * Math.PI/180;
+    var ang = (-90 - 360*k/n) * Math.PI/180;
     var x = 50 + 41*Math.cos(ang), y = 50 + 40*Math.sin(ang);
     var side = n % 2 === 1 ? '' : (i < half ? ' seat-a' : ' seat-b');
     var empty = !(S.playerNames[i]||'').trim();
@@ -788,6 +868,7 @@ function tplMesa(n) {
       + '<em class="avatar c'+i+'" id="sa'+i+'">'+esc(initial(S.playerNames[i], i+1))+'</em>'
       + '<span class="seat-name'+(empty?' seat-empty':'')+'" id="sn'+i+'">'+esc(seatName(i))+'</span>'
       + '<span class="seat-tag">'+seatTag(i, n)+'</span>'
+      + (i === dealer ? '<span class="seat-deal">reparte</span>' : '')
       + '</button>';
   }).join('');
   return '<div class="mesa">'
@@ -844,6 +925,11 @@ function tplSetup() {
     + tplMesa(n)
     + '<div class="swap-hint">'+mesaHint(n)+'</div>'
     + rows
+    + (n % 2 === 0
+      ? '<div class="card-label" style="margin-top:22px">Reparte primero</div>'
+        + dealerChips(dealerFor(n, 1).dealer, 'ds-')
+        + '<div class="swap-hint" style="margin:10px 0 0">Después va girando hacia la derecha. Corta el de la izquierda del que reparte.</div>'
+      : '<div class="swap-hint" style="margin:16px 0 0">Reparte el de la izquierda del que descansa, y corta el de la izquierda del que reparte.</div>')
     + '</div>'
     + '<div class="card">'
     + '<div class="card-label">Puntos para ganar</div>'
@@ -895,6 +981,7 @@ function tplGame() {
       + header
       + '<div class="game-body">'
       + scoreSection
+      + tplDealer()
       + tplDuels()
       + tplHistory()
       + '<div style="height:6px"></div>'
@@ -905,7 +992,7 @@ function tplGame() {
       + '</div>';
   }
 
-  var teamsSection = isIndividual() ? tplTeamsRotating() : '';
+  var teamsSection = isIndividual() ? tplTeamsRotating() : tplDealer();
   /* de a 6 no hay tarjeta de parejas (los equipos son fijos), así que la fase
      va acá para que igual se vea cuándo arranca el pica pica */
   var phaseNote = (picaApplies() && !isIndividual())
@@ -1137,6 +1224,7 @@ function tplTeamsRotating() {
   }
 
   return restCard
+    + tplDealer()
     + '<div class="card animate">'
     + '<div class="card-label">Las parejas de esta mano</div>'
     + phase
@@ -1298,6 +1386,13 @@ function bind() {
   on('btn-hist',  function(){ S.showHist=!S.showHist; render(); });
   [2,3,4,5,6,7].forEach(function(c){ on('cnt-'+c, function(){ setNumPlayers(c); }); });
   if (S.screen==='setup') {
+    /* los puntos para ganar también se guardan mientras se escriben, así no se
+       pierden al elegir quién reparte u otra opción que redibuja el setup */
+    var tg = q('tgt');
+    if (tg) tg.addEventListener('input', function(){
+      var v = parseInt(tg.value);
+      if (v >= 5) { S.target = v; saveState(); }
+    });
     for (var pi=0; pi<S.numPlayers; pi++) {
       (function(idx){
         var el = q('pn'+idx);
@@ -1318,6 +1413,13 @@ function bind() {
     }
   }
   ['suma','diferencia'].forEach(function(v){ on('pscore-'+v, function(){ setPicaScoring(v); }); });
+  on('btn-deal-change', function(){ S.showDealerPick = true; render(); });
+  for (var dl=0; dl<S.numPlayers; dl++) {
+    (function(idx){
+      on('ds-'+idx, function(){ setDealer(idx); });
+      on('dl-'+idx, function(){ setDealer(idx); });
+    })(dl);
+  }
   if (isIndividual() && restCount()>0) {
     for (var i=0;i<S.numPlayers;i++) {
       (function(idx){ on('sit-'+idx, function(){ setSittingOut(idx); }); })(i);
@@ -1395,7 +1497,7 @@ function setNumPlayers(n) {
      a 6 no se pierden los dos últimos */
   var cur = (S.playerNames||[]).slice();
   for (var i=0;i<S.numPlayers;i++) { var el=q('pn'+i); cur[i]=el?el.value:(S.playerNames[i]||''); }
-  S = Object.assign({}, S, { numPlayers:n, playerNames:cur });
+  S = Object.assign({}, S, { numPlayers:n, playerNames:cur, dealerStart:0 });
   render();
 }
 function setPicaScoring(v) {
